@@ -1,6 +1,0 @@
-\\ this is the first try
-x = 4
-y = 6
-while x<= y:
-  print(f'x is {x}')
-  x+=1
