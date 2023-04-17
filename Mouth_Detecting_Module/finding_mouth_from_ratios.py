@@ -14,7 +14,7 @@ def assert_mouth_with_ratios(face, mouthes):
     for mouth in mouthes:
         (x_mouth, y_mouth, width_mouth, height_mouth) = mouth
         if (w * min_mouth_width_factor <= width_mouth <= w* max_mouth_width_factor):
-            if (w * min_mouth_height_factor <= height_mouth <= w* max_mouth_height_factor):
+            if (h * min_mouth_height_factor <= height_mouth <= h* max_mouth_height_factor):
                 valid_mouthes.append(mouth)
     return valid_mouthes
 
@@ -29,7 +29,7 @@ Ratio_from_face = 1 / 4
 mouth_cascade = cv2.CascadeClassifier('haarcascade_mcs_mouth.xml')
 face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 # Read the input image
-img = cv2.imread('face.jpg')
+img = cv2.imread('face3.jpg')
 # Convert into grayscale
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 # Detect faces

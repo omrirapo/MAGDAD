@@ -20,7 +20,6 @@ def get_mouth_inside_face(img):
         # Convert into grayscale
         # Detect faces
         mouthes = mouth_cascade.detectMultiScale(gray[y:y + h, x:x + w], 1.1, 2)
-
         # adds all possible mouths to list
         oriented_mouths = []
         for _x, _y, _w, _h in mouthes:
@@ -72,6 +71,6 @@ if __name__ == '__main__':
             cv2.rectangle(img, (_x, _y), (_x + _w, _y + _h), (255, 0, 0), 2)
 
 
-cv2.imshow('img', img)
+    cv2.imshow('img', img)
 
-cv2.waitKey()
+    cv2.waitKey()
