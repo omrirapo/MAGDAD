@@ -1,5 +1,5 @@
 import math
-
+import yogevs_functions
 import cv2
 
 
@@ -23,7 +23,7 @@ def get_mouth_inside_face(img):
         # adds all possible mouths to list
         oriented_mouths = []
         for _x, _y, _w, _h in mouthes:
-            oriented_mouths.append((_x+x, y+_y, _w, _h))
+            oriented_mouths.append((_x + x, y + _y, _w, _h))
         possibilities.append(((x, y, w, h), oriented_mouths))
     return possibilities
 
@@ -38,25 +38,21 @@ def asstimated_center_of_mouth(face, factor):
     """
     # Draw rectangle around the faces
     (x, y, w, h) = face
-    return (x + w // 2, y + round(h*factor))
+    return (x + w // 2, y + round(h * factor))
 
 
 def select_in_relation_to_face(possibilities):
     sorted_faces_mouths = []
     for face, mouths in possibilities:
         asstimation = asstimated_center_of_mouth(face, 0.75)
-        sorted_faces_mouths.append((face, sorted(mouths, key = lambda x: math.dist(asstimated_center_of_mouth(x, 0.75), asstimation))))
+        sorted_faces_mouths.append(
+            (face, sorted(mouths, key=lambda x: math.dist(asstimated_center_of_mouth(x, 0.75), asstimation))))
     return sorted_faces_mouths
 
 
-# Display the output
-if __name__ == '__main__':
-    img = cv2.imread('faces.jpg')
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    # Detect faces
-    face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-
+def detect_in_frame(img, previous: any, face_cascade):
     # Draw rectangle around the faces
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(gray, 1.1, 2)
 
     # Draw rectangle around the faces
@@ -65,12 +61,50 @@ if __name__ == '__main__':
         cv2.circle(img, (x + (w // 2), y + (3 * h // 4)), 20, (255, 0, 0))
     possibilities = get_mouth_inside_face(img)
     sorted_faces_mouths = select_in_relation_to_face(possibilities)
-    for face, mouths in sorted_faces_mouths:
-        if not len(mouths) == 0:
-            (_x, _y, _w, _h) = mouths[0]
-            cv2.rectangle(img, (_x, _y), (_x + _w, _y + _h), (255, 0, 0), 2)
+    in_relation_to_previous = []
+
+    if previous != None:
+        for face, mouths in sorted_faces_mouths:
+            mouth_sorted_by_yogev = yogevs_functions.restrict_to_target(previous, mouths)
+            if mouth_sorted_by_yogev[0][1] == 0:
+                in_relation_to_previous.append((face, mouths[1]))
+            else:
+                in_relation_to_previous.append((face, mouth_sorted_by_yogev[0][0]))
+
+    else:
+        for face, mouths in sorted_faces_mouths:
+            in_relation_to_previous.append((face, [0][0]))
+
+    for face, mouths in in_relation_to_previous:
+        (_x, _y, _w, _h) = mouths
+        cv2.rectangle(img, (_x, _y), (_x + _w, _y + _h), (255, 0, 0), 2)
+    sorted_by_fit = sorted(in_relation_to_previous, key=lambda x: x[1][0] - len(img[0]) // 2)
+
+    return img, sorted_by_fit[0]
 
 
-    cv2.imshow('img', img)
+# Display the output
+if __name__ == '__main__':
+    previous = None
+    import cv2
+    import numpy as np
 
-    cv2.waitKey()
+    face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+
+    cap = cv2.VideoCapture(0)
+    ds_factor = 0.5
+
+    while True:
+        ret, frame = cap.read()
+        frame = cv2.resize(frame, None, fx=ds_factor, fy=ds_factor, interpolation=cv2.INTER_AREA)
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        frame, previous = detect_in_frame(frame, previous, face_cascade)
+        cv2.imshow('Mouth Detector', frame)
+
+        c = cv2.waitKey(1)
+        if c == 27:
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()

@@ -23,7 +23,7 @@ def restrict_to_target(target, obj_arr):
             width = target[2] + rec[2] -(max(rig,rr)-min(lef,rl))
             hight = target[3] + rec[3] -(max(bot,rb)-min(top,rt))
             val = width*hight
-            inside[rec] = val
+            inside[rec] = val/(rec[3]*rec[2])
     sorted_recs = sorted(inside.items(), key=lambda x: x[1], reverse=True)
     return sorted_recs
 
