@@ -1,6 +1,7 @@
 import math
 import yogevs_functions
 import cv2
+import numpy as np
 
 
 def get_mouth_inside_face(img):
@@ -19,7 +20,7 @@ def get_mouth_inside_face(img):
         # Read the input image
         # Convert into grayscale
         # Detect faces
-        mouthes = mouth_cascade.detectMultiScale(gray[y:y + h, x:x + w], 1.1, 2)
+        mouthes = mouth_cascade.detectMultiScale(gray[y:y + h, x:x + w], 1.1, 11)
         # adds all possible mouths to list
         oriented_mouths = []
         for _x, _y, _w, _h in mouthes:
@@ -58,36 +59,26 @@ def detect_in_frame(img, previous: any, face_cascade):
     # Draw rectangle around the faces
     for (x, y, w, h) in faces:
         cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
-        cv2.circle(img, (x + (w // 2), y + (3 * h // 4)), 20, (255, 0, 0))
     possibilities = get_mouth_inside_face(img)
     sorted_faces_mouths = select_in_relation_to_face(possibilities)
     in_relation_to_previous = []
+    if len(sorted_faces_mouths) == 0:
+        return img, None
 
-    if previous != None:
-        for face, mouths in sorted_faces_mouths:
-            mouth_sorted_by_yogev = yogevs_functions.restrict_to_target(previous, mouths)
-            if mouth_sorted_by_yogev[0][1] == 0:
-                in_relation_to_previous.append((face, mouths[1]))
-            else:
-                in_relation_to_previous.append((face, mouth_sorted_by_yogev[0][0]))
-
-    else:
-        for face, mouths in sorted_faces_mouths:
-            in_relation_to_previous.append((face, [0][0]))
 
     for face, mouths in in_relation_to_previous:
         (_x, _y, _w, _h) = mouths
         cv2.rectangle(img, (_x, _y), (_x + _w, _y + _h), (255, 0, 0), 2)
     sorted_by_fit = sorted(in_relation_to_previous, key=lambda x: x[1][0] - len(img[0]) // 2)
+    if len(sorted_by_fit) !=0:
+        return img, sorted_by_fit[0][0]
+    return img
 
-    return img, sorted_by_fit[0]
 
 
 # Display the output
 if __name__ == '__main__':
     previous = None
-    import cv2
-    import numpy as np
 
     face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 

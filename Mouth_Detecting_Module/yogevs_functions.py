@@ -1,3 +1,4 @@
+
 def restrict_to_target(target, obj_arr):
     """
     rstrict search for specific target rect. recieves a rectangle and a list of rectangles and returnes
@@ -7,24 +8,16 @@ def restrict_to_target(target, obj_arr):
     :param obj_arr: array of rects
     :return: list of rects in obj arr that intersect with target
     """
-    inside = {}
-    top = target[1]
-    bot = target[1]+target[3]
-    lef = target[0]
-    rig = target[0]+target[2]
+    if target is None:
+        return [(x,0) for x in obj_arr]
+    recs = []
     for rec in obj_arr:
-        rt = rec[1]
-        rb = rec[1] + rec[3]
-        rl = rec[0]
-        rr = rec[0] + rec[2]
-        if rt > bot or rb < top or rl > rig or rr < lef:
-            pass
+        if rec[2] + target[2] < max(rec[0]+rec[2], target[0]+target[2]) - min(rec[0],target[0]) or rec[3] + target[3] < max(rec[1]+rec[3], target[1]+target[3]) - min(rec[1],target[1]):
+            recs.append((rec,0))
         else:
-            width = target[2] + rec[2] -(max(rig,rr)-min(lef,rl))
-            hight = target[3] + rec[3] -(max(bot,rb)-min(top,rt))
-            val = width*hight
-            inside[rec] = val/(rec[3]*rec[2])
-    sorted_recs = sorted(inside.items(), key=lambda x: x[1], reverse=True)
-    return sorted_recs
+            recs.append((rec,1))
+
+
+    return recs
 
 
