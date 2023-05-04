@@ -1,8 +1,11 @@
 import cv2
 import yogevs_functions
 import combined_mouth_selection
-if __name__ == '__main__':
-
+def mouthing():
+    """
+    a function using image recognition in order to give an approximation to the location of the mouth
+    :return: the distance between the mouth and the middle of the image in proportion to the size of the mouth
+    """
     MAX_FRAME_OF_LOSS = 5
     test_start = False
     # initializes cascades
@@ -11,6 +14,7 @@ if __name__ == '__main__':
     eyes_cascade = cv2.CascadeClassifier('haarcascade_smile.xml')
     frame_count = 0
     frame_movement = 0
+    t=-1
     if mouth_cascade.empty():
         raise IOError('Unable to load the mouth cascade classifier xml file')
 
@@ -20,6 +24,7 @@ if __name__ == '__main__':
     diff = (0, 0)
     frame_loss = 0
     while True:
+        t+=1
         frame_count += 1
         if frame_count != 10:
             continue
@@ -34,9 +39,14 @@ if __name__ == '__main__':
                 frame = cv2.putText(frame, 'go up ' + str((height // 4 - curr[1]) / curr[3]), (100, 100),
                                     cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
 
+                yield (height // 4 - curr[1]) / curr[3]
+
+
             if curr[1] > height // 4:
                 frame = cv2.putText(frame, 'go down' + str(-(height // 4 - curr[1]) / curr[3]), (100, 100),
                                     cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
+                yield (height // 4 - curr[1]) / curr[3]
+
         frame = cv2.resize(frame, None, fx=ds_factor, fy=ds_factor, interpolation=cv2.INTER_AREA)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         # Find faces
@@ -87,11 +97,13 @@ if __name__ == '__main__':
 
             y = int(y - 0.15 * h)
             cv2.circle(frame, (x + (w // 2), y + (h // 2)), 5, (255, 0, 0))
+            cv2.circle(frame, (width//4,height//4), 5, (0, 255, 0))
+
 
             # finds the approximate movement
             if curr is not None:
                 diff = (x - curr[0] + (w - curr[2]) // 2, y - curr[1] + (h - curr[3]) // 2)
-            i
+
             test_start = True
             curr = (x, y, w, h)
             frame_loss = 0
