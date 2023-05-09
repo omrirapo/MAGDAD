@@ -1,7 +1,4 @@
-import pickle
 
-Kp = 0.5
-I = 0.5
 
 
 def PID(Kp, Ki, Kd, MV_bar=0):
@@ -15,7 +12,7 @@ def PID(Kp, Ki, Kd, MV_bar=0):
     """
     # initialize stored data
     e_prev = 0
-    t_prev = -100
+    t_prev = -1
     I = 0
 
     # initial control
@@ -37,6 +34,7 @@ def PID(Kp, Ki, Kd, MV_bar=0):
         # update stored data for next iteration
         e_prev = e
         t_prev = t
+
 
 
 
