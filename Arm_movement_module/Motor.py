@@ -32,6 +32,7 @@ class Motor:
     def move_to_angle(self, new_angle):
         self._servo.value = self._Anlge2ValConverter(new_angle)
         self.currAngle = new_angle
+        print(f"curr angle = {new_angle}, value = {self._servo.value}")
 
     def get_angle(self):
         return self.currAngle

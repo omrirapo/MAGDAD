@@ -7,6 +7,9 @@ from gpiozero.pins.pigpio import PiGPIOFactory
 UNITS_PER_ANGLE = 1 / 580
 MOVE_TIME = 0.01
 
+d = 1
+r = 1
+
 
 def move_to_angle(angle, servo: Servo):
     curr_angle = servo.value / UNITS_PER_ANGLE
@@ -42,3 +45,6 @@ if __name__ == '__main__':
         move_to_angle(i, arm_servo)
         move_to_angle(get_wrist_angle(i), wrist_servo)
         sleep(0.01)
+
+
+
