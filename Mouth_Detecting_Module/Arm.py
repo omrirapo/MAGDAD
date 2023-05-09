@@ -77,7 +77,7 @@ class Arm:
 if __name__ == '__main__':
     arm_motor = Motor(18, lambda alpha: alpha/90 )
     wrist_motor = Motor(17, lambda alpha: alpha/90)
-    sholder_motor = StepperMotor(20, 200,5)
-    arm = Arm(arm_motor, wrist_motor, sholder_motor, 89.142, 129.5)
+    shoulder_motor = StepperMotor(20, 200,5)
+    arm = Arm(arm_motor, wrist_motor, shoulder_motor, 89.142, 129.5)
     arm.move_hand_by_motors_input(0, 0, 0)
 

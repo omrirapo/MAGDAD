@@ -1,6 +1,28 @@
 import cv2
-import yogevs_functions
-import combined_mouth_selection
+DELTA =0.1
+def restrict_to_target(target, obj_arr):
+    """
+    rstrict search for specific target rect. recieves a rectangle and a list of rectangles and returnes
+    a new list of all the rects that intersect it.
+    sorted by the size of the intesection
+    :param target: (x,y,w,h)
+    :param obj_arr: array of rects
+    :return: list of rects in obj arr that intersect with target
+    """
+    if target is None:
+        return [(x,0) for x in obj_arr]
+    recs = []
+    for rec in obj_arr:
+        if rec[2] + target[2] < max(rec[0]+rec[2], target[0]+target[2]) - min(rec[0],target[0]) or rec[3] + target[3] < max(rec[1]+rec[3], target[1]+target[3]) - min(rec[1],target[1]):
+            recs.append((rec,0))
+        else:
+            recs.append((rec,1))
+
+
+    return recs
+
+
+
 def mouthing():
     """
     a function using image recognition in order to give an approximation to the location of the mouth
@@ -35,31 +57,33 @@ def mouthing():
         height, width, channels = frame.shape
         # gives instructions
         if test_start:
-            if curr[1] < height // 4:
-                frame = cv2.putText(frame, 'go up ' + str((height // 4 - curr[1]) / curr[3]), (100, 100),
+            y = curr[1] + curr[3]//2
+            if y < height // 4:
+                frame = cv2.putText(frame, 'go up ' + str((height // 4 - y) / curr[3]), (100, 100),
                                     cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
 
-                yield (height // 4 - curr[1]) / curr[3]
 
-
-            if curr[1] > height // 4:
-                frame = cv2.putText(frame, 'go down' + str(-(height // 4 - curr[1]) / curr[3]), (100, 100),
+            if y > height // 4:
+                frame = cv2.putText(frame, 'go down' + str(-(height // 4 - y) / curr[3]), (100, 100),
                                     cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
-                yield (height // 4 - curr[1]) / curr[3]
+            if abs(height // 4 - y)/ curr[3] > DELTA:
+                yield (height // 4 - y) / curr[3]
+            else:
+                break
 
         frame = cv2.resize(frame, None, fx=ds_factor, fy=ds_factor, interpolation=cv2.INTER_AREA)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         # Find faces
-        faces = face_cascade.detectMultiScale(gray, 1.1, 2)
+        faces = face_cascade.detectMultiScale(gray, 1.3, 30)
         # Find mouths
-        mouth_rects = mouth_cascade.detectMultiScale(gray, 1.3, 13)
+        mouth_rects = mouth_cascade.detectMultiScale(gray, 1.1, 13)
         # Finds eyes
-        eyes_rects = eyes_cascade.detectMultiScale(gray, 1.3, 13)
+        eyes_rects = eyes_cascade.detectMultiScale(gray, 1.1, 13)
         # Filter all mouths inside a face
         if len(faces) != 0:
             temp_arr = []
             for i in faces:
-                temp = yogevs_functions.restrict_to_target(i, mouth_rects)
+                temp = restrict_to_target(i, mouth_rects)
                 for j, val in temp:
                     if val != 0:
                         temp_arr.append(j)
@@ -69,7 +93,7 @@ def mouthing():
         # deletes all eyes
 
         for i in eyes_rects:
-            temp = yogevs_functions.restrict_to_target(i, mouth_rects)
+            temp = restrict_to_target(i, mouth_rects)
             mouth_rects = []
             for j, val in temp:
                 if val == 0:
@@ -77,7 +101,7 @@ def mouthing():
 
 
         temp_arr = []
-        temp = yogevs_functions.restrict_to_target(curr, mouth_rects)
+        temp = restrict_to_target(curr, mouth_rects)
         for j, val in temp:
             if val != 0:
                 temp_arr.append(j)

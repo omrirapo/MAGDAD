@@ -1,4 +1,5 @@
-import only_mouth
+import pickle
+
 Kp = 0.5
 I = 0.5
 
@@ -37,12 +38,5 @@ def PID(Kp, Ki, Kd, MV_bar=0):
         e_prev = e
         t_prev = t
 
-if __name__ == '__main__':
-    pid = PID(2,0.2,0.2)
-    pid.send(None)
-    t=0
-    for i in only_mouth.mouthing():
-        print(pid.send([t, i, 0]))
-        t+=1
 
 
