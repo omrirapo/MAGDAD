@@ -11,6 +11,14 @@ MOVE_TIME = 0.01
 class Arm:
 
     def __init__(self, wrist_motor: Motor, arm_motor: Motor, shoulder_motor: StepperMotor, d: float, r: float):
+        """
+
+        :param wrist_motor:
+        :param arm_motor:
+        :param shoulder_motor:
+        :param d:
+        :param r:
+        """
         self._WristMotor = wrist_motor
         self._ArmMotor = arm_motor
         self._ShoulderMotor = shoulder_motor
@@ -18,18 +26,39 @@ class Arm:
         self.r = r
 
     def _coordinates_to_motor_input(self, x: float, y: float, alpha: float):
+        """
+
+        :param x:
+        :param y:
+        :param alpha:
+        :return:
+        """
         alpha1 = math.asin((y - self.d * math.sin(alpha)) / self.r)
         alpha2 = alpha1 - alpha
         l = x - self.r * math.cos(alpha1) - self.d * math.sin(alpha)
         return l, alpha1, alpha2
 
     def _motor_input_to_coordinates(self, l: float, alpha1: float, alpha2: float):
+        """
+
+        :param l:
+        :param alpha1:
+        :param alpha2:
+        :return:
+        """
         x = l + self.r * math.cos(alpha1) + self.d * math.cos(alpha1 - alpha2)
         y = self.r * math.sin(alpha1) + self.d * math.sin(alpha1 - alpha2)
         alpha = alpha1 - alpha2
         return x, y, alpha
 
     def move_hand_by_motors_input(self, l: float, alpha1: float, alpha2: float):
+        """
+        meni you need to documebt the code
+        :param l:
+        :param alpha1:
+        :param alpha2:
+        :return:
+        """
         curr_arm_angle = self._ArmMotor.currAngle
         curr_wrist_angle = self._WristMotor.currAngle
         curr_shoulder_position = self._ShoulderMotor.get_x()
@@ -44,40 +73,82 @@ class Arm:
             sleep(MOVE_TIME)
 
     def move_hand(self, x: float, y: float, alpha: float):
+        """
+
+        :param x:
+        :param y:
+        :param alpha:
+        :return:
+        """
         self.move_hand_by_motors_input(*self._coordinates_to_motor_input(x, y, alpha))
 
     def get_coordinates(self):
+        """
+
+        :return:
+        """
         return self._motor_input_to_coordinates(self._ArmMotor.currAngle, self._WristMotor.currAngle,
                                                 self._ShoulderMotor.get_x())
 
     def get_mouth_distance(self):
+        """
+
+        :return:
+        """
         pass
     def get_x(self):
+        """
+
+        :return:
+        """
         return self.get_coordinates()[0]
 
     def get_y(self):
+        """
+
+        :return:
+        """
         return self.get_coordinates()[1]
 
     def get_alpha(self):
+        """
+
+        :return:
+        """
         return self.get_coordinates()[2]
     def move_forward(self):
+        """
+
+        :param self:
+        :return:
+        """
         pass
 
     def move_backward(self):
+        """
+
+        :param self:
+        :return:
+        """
         pass
 
     def move_up(self):
+        """
+
+        :param self:
+        :return:
+        """
         pass
 
     def move_down(self):
+        """
+
+        :param self:
+        :return:
+        """
         pass
 
 
 
-if __name__ == '__main__':
-    arm_motor = Motor(18, lambda alpha: alpha/90 )
-    wrist_motor = Motor(17, lambda alpha: alpha/90)
-    shoulder_motor = StepperMotor(20, 200,5)
-    arm = Arm(arm_motor, wrist_motor, shoulder_motor, 89.142, 129.5)
-    arm.move_hand_by_motors_input(0, 0, 0)
+
 
