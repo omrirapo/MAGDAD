@@ -62,7 +62,7 @@ class Arm:
         curr_arm_angle = self._ArmMotor.currAngle
         curr_wrist_angle = self._WristMotor.currAngle
         curr_shoulder_position = self._ShoulderMotor.get_x()
-        num_of_steps = int(math.abs((alpha1 - curr_arm_angle) * (alpha2 - curr_wrist_angle)))
+        num_of_steps = int(abs((alpha1 - curr_arm_angle) * (alpha2 - curr_wrist_angle)))
         for i in range(num_of_steps):
             new_arm_angle = curr_arm_angle + i * (alpha1 - curr_arm_angle) / num_of_steps
             new_wrist_angle = curr_wrist_angle + i * (alpha2 - curr_wrist_angle) / num_of_steps
@@ -116,10 +116,11 @@ class Arm:
         :return:
         """
         return self.get_coordinates()[2]
-    def move_forward(self):
+    def move_forward(self, speed):
         """
 
         :param self:
+        :param: speed : fastest at 1
         :return:
         """
         pass
