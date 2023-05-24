@@ -146,6 +146,7 @@ def move_till_touch(arm : Arm):
     :param arm: arm object
     :return:
     """
+    initialize_buttons(button_pins["touch"], GPIO.RISING)
 
     while not button_pins["touch"]:
         speed = 0.2+0.8*(mouth_dist[-1]-arm.get_x())/mouth_dist[-1] # poprtional to history
@@ -154,9 +155,12 @@ def move_till_touch(arm : Arm):
 
 
 def start_all_buttons():
+    """
+    initialize static buttons
+    :return:
+    """
     initialize_buttons(button_pins["micro_front"], GPIO.RISING)
     initialize_buttons(button_pins["micro_back"], GPIO.RISING)
-    initialize_buttons(button_pins["touch"], GPIO.RISING)
     initialize_buttons(button_pins["ir_turn"], GPIO.RISING)
     initialize_buttons(button_pins["changefood"], GPIO.RISING)
     initialize_buttons(button_pins["emergency"], GPIO.FALLING) # emergerncy needs to make sure it works

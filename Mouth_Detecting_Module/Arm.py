@@ -70,6 +70,7 @@ class Arm:
             self._ArmMotor.move_to_angle(new_arm_angle)
             self._WristMotor.move_to_angle(new_wrist_angle)
             self._ShoulderMotor.move_to_x(new_shoulder_position)
+
             sleep(MOVE_TIME)
 
     def move_hand(self, x: float, y: float, alpha: float):
@@ -96,6 +97,7 @@ class Arm:
         :return:
         """
         pass
+
     def get_x(self):
         """
 
@@ -116,6 +118,7 @@ class Arm:
         :return:
         """
         return self.get_coordinates()[2]
+
     def move_forward(self, speed):
         """
 
@@ -125,10 +128,11 @@ class Arm:
         """
         pass
 
-    def move_backward(self):
+    def move_backward(self, speed):
         """
 
         :param self:
+        :param: speed : fastest at 1
         :return:
         """
         pass
