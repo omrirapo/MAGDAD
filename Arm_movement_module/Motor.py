@@ -6,10 +6,12 @@ from gpiozero.pins.pigpio import PiGPIOFactory
 
 
 class Motor:
-    def __init__(self, GPIO: int, Anlge2ValConverter : Callable, MinSignal = 0.5 / 1000, MaxSignal = 2.5 / 1000 ):
+    def __init__(self, GPIO: int, Anlge2ValConverter: Callable, MinSignal=0.5 / 1000, MaxSignal=2.5 / 1000):
         factory = PiGPIOFactory()
-        self._servo = Servo(GPIO, min_pulse_width= MinSignal, max_pulse_width= MaxSignal, pin_factory=factory)
-        self._Anlge2ValConverter =Anlge2ValConverter
+        self._servo = Servo(GPIO, min_pulse_width=MinSignal, max_pulse_width=MaxSignal, pin_factory=factory)
+
+        self._servo = 0
+        self._Anlge2ValConverter = Anlge2ValConverter
         self.currAngle = 0
         self.move_to_angle(self.currAngle)
 
@@ -30,15 +32,16 @@ class Motor:
         self._servo = value
 
     def move_to_angle(self, new_angle):
-        self._servo.value = self._Anlge2ValConverter(new_angle)
-        self.currAngle = new_angle
-        print(f"curr angle = {new_angle}, value = {self._servo.value}")
+        if -1 < self._Anlge2ValConverter(new_angle) < 1:
+            self._servo.value = self._Anlge2ValConverter(new_angle)
+            self.currAngle = new_angle
+            print(f"curr angle = {new_angle}, value = {self._servo.value}")
+            return True
+        else:
+            return False
+
+    def is_angle_possible(self, new_angle):
+        return -1 < self._Anlge2ValConverter(new_angle) < 1
 
     def get_angle(self):
         return self.currAngle
-
-
-
-
-
-

@@ -1,8 +1,8 @@
 import typing
 from typing import Callable
 
-from gpiozero import Servo
-from gpiozero.pins.pigpio import PiGPIOFactory
+#from gpiozero import Servo
+#from gpiozero.pins.pigpio import PiGPIOFactory
 
 
 class StepperMotor:
