@@ -3,6 +3,7 @@ from Motor import Motor
 from stepper_motor import StepperMotor
 from only_mouth import mouthing
 from time import sleep
+from Plate import Plates
 import pickle
 import RPi.GPIO as GPIO
 MOUTH_IN_DEGREES = 10
@@ -170,6 +171,22 @@ def start_all_buttons():
     initialize_buttons(button_pins["bring_food"], GPIO.RISING)
     initialize_buttons(button_pins["back"], GPIO.RISING)
 
+def init_platter() :
+    """
+
+    :return:
+    """
+    lower_height = -200
+    upper_height = 40
+    iner_radi = 60
+    outer_radi = 120
+    stps = 0
+    plat_mot = StepperMotor(0,0,stps) # todo fill in the constants for the motors
+    turn_mot = StepperMotor(0,0,stps) # todo fill in the constants for the motors
+    platter = Plates(lower_height,upper_height,iner_radi,outer_radi, plat_mot, turn_mot)
+
+
+
 
 def flow():
     """
@@ -180,6 +197,8 @@ def flow():
     start_all_buttons()
 
     # todo initialise user preferances
+    #initialise plate:
+
 
     # initialise arm
 
@@ -204,5 +223,5 @@ def flow():
 
 
 if __name__ == '__main__':
-    orient("hey from ssh")
+    orient("")
     move_till_touch(lambda: False)

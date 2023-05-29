@@ -1,20 +1,23 @@
 import stepper_motor
+from Mouth_Detecting_Module.Arm import Arm
 
 
 class Plates:
 
-    def __init__(self, lower_height, upper_height, iner_radi, outer_radi, platter_mot: stepper_motor,
+    def __init__(self, lower_height, dx, upper_height, iner_radi, outer_radi, platter_mot: stepper_motor,
                  turn_mot: stepper_motor):
         """
 
         :param lower_height:
+        :param dx:
         :param upper_height:
-        :param iner_radi:
-        :param outer_radi:
-        :param platter_mot:
-        :param turn_mot:
+        :param iner_radi: inner radius of bowl
+        :param outer_radi: outer radius of bowl
+        :param platter_mot: platter stepper motor obj
+        :param turn_mot: turning bowls stepper motor obj
         """
         self.bottom = lower_height
+        self.dx = dx
         self.lip_height = upper_height
         self.iner_radi = iner_radi
         self.outer_radi = outer_radi
@@ -57,3 +60,22 @@ class Plates:
         """
         self.angle_fed[self.cur_plate][self.diag] += 1
 
+    def gather_food(self, arm : Arm):
+        """
+
+        :param arm:
+        :return:
+        """
+        #go inside the bowl
+        #move forward
+        #go up while turning
+        #chang amgle to paralel
+        # go back a bit
+        # go up
+        dx =30
+        dy = 40
+        arm.move_hand(self.dx, self.bottom, 90)
+        arm.move_hand(x=arm.get_x()+ self.iner_radi, alpha= 45)
+        arm.move_hand(y= arm.get_y()+dy,alpha= 20)
+        arm.move_hand(x=arm.get_x()-dx,alpha= 0)
+        arm.move_hand(y= arm.get_y()+dy)
