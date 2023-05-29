@@ -112,23 +112,43 @@ class Arm:
     def get_alpha2(self):
         return self._WristMotor.currAngle
 
-    def move_forward(self):
+    def move_forward(self, dist, time):
+        """
+
+        :param dist: distance to travel
+        :param time: time to travel it
+        """
         pass
 
-    def move_backward(self):
+    def move_backward(self,dist,time):
+        """
+
+        :param dist: distance to travel
+        :param time: time to travel it
+        """
         pass
 
-    def move_up(self):
+    def move_up(self,dist,time):
+        """
+
+        :param dist: distance to travel
+        :param time: time to travel it
+        """
         pass
 
-    def move_down(self):
+    def move_down(self,dist,time):
+        """
+
+        :param dist: distance to travel
+        :param time: time to travel it
+        """
         pass
 
 
-if __name__ == '__main__':
-    arm_motor = Motor(17, lambda alpha: alpha / 90)
-    wrist_motor = Motor(18, lambda alpha: alpha / 90)
-    shoulder_motor = None
-    arm = Arm(arm_motor, wrist_motor, shoulder_motor, 89.142, 129.5)
-    print(arm._coordinates_to_motor_input(10, 10, 90))
-    #
+# if __name__ == '__main__':
+#     arm_motor = Motor(17, lambda alpha: alpha / 90)
+#     wrist_motor = Motor(18, lambda alpha: alpha / 90)
+#     shoulder_motor = None
+#     arm = Arm(arm_motor, wrist_motor, shoulder_motor, 89.142, 129.5)
+#     print(arm._coordinates_to_motor_input(10, 10, 90))
+#     #

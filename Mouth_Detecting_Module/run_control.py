@@ -9,7 +9,7 @@ import RPi.GPIO as GPIO
 MICRO_FRONT = 0
 MICRO_BACK = 0
 TOUCH = 0
-IR_TURN = 0
+PLATE_MICRO_SWITCH = 0
 CHANGE_FOOD = 0
 EMERGENCY = 0
 BRING_FOOD = 0
@@ -25,36 +25,40 @@ PLATTER_STP = 0
 
 # dimensions
 CAMHEIGHT = 20
+# arm lengths
+d = 89.142  # from the wrist to the end of the spoon
+r = 129.5  # the length from the elbow to the wrist
 
-
-#histogram
+# histogram
 mouth_height = []
 mouth_dist = []
 
 pin_mangement = {
+    2: "stpshoulder",
+    3: "dirshoulder",
     4: "micro_front",
-    27: "micro_back",
-    22: "touch",
-    23: "ir_turn",
-    24: "changefood",
-    25: "emergency",
-    5: "bring_food",
-    6: "back",
-    17: "servo_arm",
-    18: "servo_wrist",
-    12: "dirshoulder",
-    13: "stpshoulder",
-    16: "dirbowl",
-    26: "stpbowl",
-    20: "dirplatter",
-    21: "stpplatter"
+    9: "servo_arm",
+    11: "touch",
+    12: "stpbowl",
+    17: "micro_back",
+    22: "stpplatter",
+    23: "dirplatter",
+    25: "servo_wrist",
+    27: "dirbowl",
+    24: "plates_micro_switch",
+
+
+    # 24: "changefood",
+    # 25: "emergency",
+    # 5: "bring_food",
+    # 6: "back",
 }
 
 button_pins = {
     "micro_front": False,
     "micro_back": False,
     "touch": False,
-    "ir_turn": False,
+    "plates_micro_switch": False,
     "changefood": False,
     "emergency": False,
     "bring_food": False,
@@ -80,6 +84,7 @@ def initialize_buttons(button, direction):
     GPIO.setup(button, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.add_event_detect(button, direction, callback=my_callback, bouncetime=200)
 
+
 def clear_button(button):
     """
     free the gpio pin
@@ -89,7 +94,7 @@ def clear_button(button):
     GPIO.remove_event_detect(pin_mangement[button])
 
 
-def orient(arm: Arm, user_height , cam_height=0):
+def orient(arm: Arm, user_height, cam_height=0):
     """
 
     :param arm: arm Obj
@@ -116,12 +121,12 @@ def orient(arm: Arm, user_height , cam_height=0):
 
     t = 0
     mouther = mouthing()
-    val = mouther() # todo add an explaination
+    val = mouther()  # todo add an explaination
     while val is not None:
-        if val>0:
+        if val > 0:
             arm.move_up()
-        elif val<0:
-            arm.move_backward()
+        elif val < 0:
+            arm.move_down()
         # arm.move_hand_by_motors_input(0, arm.get_alpha1() + val * 10, arm.get_alpha1() + val * 10) # todo what is 10
         t += 1
         val = mouther()
@@ -138,9 +143,10 @@ def orient(arm: Arm, user_height , cam_height=0):
 
     # source, destination
 
+
 #     pickle.dump(db, dbfile, protocol=pickle.HIGHEST_PROTOCOL)
 
-def move_till_touch(arm : Arm):
+def move_till_touch(arm: Arm, dist, time):
     """
 
     :param arm: arm object
@@ -149,8 +155,8 @@ def move_till_touch(arm : Arm):
     initialize_buttons(button_pins["touch"], GPIO.RISING)
 
     while not button_pins["touch"]:
-        speed = 0.2+0.8*(mouth_dist[-1]-arm.get_x())/mouth_dist[-1] # poprtional to history
-        arm.move_forward(speed)
+        speed = 0.2 + 0.8 * (mouth_dist[-1] - arm.get_x()) / mouth_dist[-1]  # poprtional to history
+        arm.move_forward(dist, time)
     mouth_dist.append(arm.get_x())
 
 
@@ -161,9 +167,9 @@ def start_all_buttons():
     """
     initialize_buttons(button_pins["micro_front"], GPIO.RISING)
     initialize_buttons(button_pins["micro_back"], GPIO.RISING)
-    initialize_buttons(button_pins["ir_turn"], GPIO.RISING)
+    initialize_buttons(button_pins["plates_micro_switch"], GPIO.RISING)
     initialize_buttons(button_pins["changefood"], GPIO.RISING)
-    initialize_buttons(button_pins["emergency"], GPIO.FALLING) # emergerncy needs to make sure it works
+    initialize_buttons(button_pins["emergency"], GPIO.FALLING)  # emergerncy needs to make sure it works
     initialize_buttons(button_pins["bring_food"], GPIO.RISING)
     initialize_buttons(button_pins["back"], GPIO.RISING)
 
@@ -176,15 +182,14 @@ def flow():
     # define buttons
     start_all_buttons()
 
-    #todo initialise user preferances
+    # todo initialise user preferances
 
-    #initialise arm
+    # initialise arm
 
     arm_motor = Motor(SERVO_ARM, lambda alpha: alpha / 90)
     wrist_motor = Motor(SERVO_WRIST, lambda alpha: alpha / 90)
     shoulder_motor = StepperMotor(20, 21, 200, 131.34)
-    arm = Arm(arm_motor, wrist_motor, shoulder_motor, 89.142, 129.5) #todo explain the constants
-
+    arm = Arm(arm_motor, wrist_motor, shoulder_motor, d, r)  # todo explain the constants
 
     # wait for input - set bowl.
 
@@ -192,15 +197,15 @@ def flow():
 
     # call orient
 
-    mouth_height.append(orient(arm,mouth_height[-1], CAMHEIGHT))
+    mouth_height.append(orient(arm, mouth_height[-1], CAMHEIGHT))
 
     move_till_touch(arm)
 
-    #go back
+    # go back
 
     # call turn bowls a bit
 
 
 if __name__ == '__main__':
-    orient("")
+    orient("hey from ssh")
     move_till_touch(lambda: False)
