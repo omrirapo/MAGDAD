@@ -77,4 +77,4 @@ class Plates:
         arm.move_hand(x=arm.get_x()+ self.iner_radi, alpha= 45)
         arm.move_hand(y= arm.get_y()+self.lip_height,alpha= 20)
         arm.move_hand(x=arm.get_x()-self.iner_radi,alpha= 0)
-        arm.move_hand(y= arm.get_y()+dy)
+        arm.move_hand(y= arm.get_y()+self.lip_height)
