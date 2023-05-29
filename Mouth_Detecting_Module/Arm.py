@@ -3,6 +3,7 @@ import math
 from Motor import Motor
 from stepper_motor import StepperMotor
 from time import sleep
+import time
 from math import cos, sin
 
 MOVE_TIME = 0.001
@@ -51,18 +52,33 @@ class Arm:
 
         curr_arm_angle = self._ArmMotor.currAngle
         curr_wrist_angle = self._WristMotor.currAngle
-        # curr_shoulder_position = self._ShoulderMotor.get_x()
+        curr_shoulder_position = self._ShoulderMotor.get_x()
         num_of_steps = 10
         for i in range(1, num_of_steps + 1):
             new_arm_angle = curr_arm_angle + i * (alpha1 - curr_arm_angle) / num_of_steps
             new_wrist_angle = curr_wrist_angle + i * (alpha2 - curr_wrist_angle) / num_of_steps
-            # new_shoulder_position = curr_shoulder_position + i * (l - curr_shoulder_position) / num_of_steps
+            new_shoulder_position = curr_shoulder_position + i * (l - curr_shoulder_position) / num_of_steps
             if not self._ArmMotor.move_to_angle(new_arm_angle):
                 return False
             if not self._WristMotor.move_to_angle(new_wrist_angle):
                 return False
-            # if not self._ShoulderMotor.move_to_x(new_shoulder_position):
-            #   return False
+            if not self._ShoulderMotor.move_to_x(new_shoulder_position):
+                return False
+            sleep(MOVE_TIME)
+        return True
+
+    def move_hand_by_angles(self, alpha1: float, alpha2: float):
+
+        curr_arm_angle = self._ArmMotor.currAngle
+        curr_wrist_angle = self._WristMotor.currAngle
+        num_of_steps = 10
+        for i in range(1, num_of_steps + 1):
+            new_arm_angle = curr_arm_angle + i * (alpha1 - curr_arm_angle) / num_of_steps
+            new_wrist_angle = curr_wrist_angle + i * (alpha2 - curr_wrist_angle) / num_of_steps
+            if not self._ArmMotor.move_to_angle(new_arm_angle):
+                return False
+            if not self._WristMotor.move_to_angle(new_wrist_angle):
+                return False
             sleep(MOVE_TIME)
         return True
 
@@ -77,7 +93,7 @@ class Arm:
     def move_hand_in_angle_range(self, x: float, y: float, min_alpha: float, max_alpha: float,
                                  ideal_alpha: float = None):
         if ideal_alpha is None:
-            ideal_alpha = (min_alpha+max_alpha)/2
+            ideal_alpha = (min_alpha + max_alpha) / 2
         dist = int(max(abs(ideal_alpha - min_alpha), abs(ideal_alpha - max_alpha)))
         for i in range(dist):
             alpha = ideal_alpha + i * (max_alpha - ideal_alpha) / dist
@@ -118,32 +134,47 @@ class Arm:
         :param dist: distance to travel
         :param time: time to travel it
         """
-        pass
+        self._ShoulderMotor.move(-dist, time)
 
-    def move_backward(self,dist,time):
+    def move_backward(self, dist, time):
         """
 
         :param dist: distance to travel
         :param time: time to travel it
         """
-        pass
+        self._ShoulderMotor.move(dist, time)
 
-    def move_up(self,dist,time):
+    def move_up_deg(self, dist):
         """
 
         :param dist: distance to travel
         :param time: time to travel it
         """
-        pass
+        self.move_hand_by_motors_input(self._ShoulderMotor.get_x(), self.get_alpha1() + dist, self.get_alpha1() + dist)
 
-    def move_down(self,dist,time):
+    def move_up(self, dist):
         """
 
         :param dist: distance to travel
         :param time: time to travel it
         """
-        pass
+        x, y, alpha = self.get_coordinates()
+        _, alpha1, alpha2 = self._coordinates_to_motor_input(x, y + dist, alpha)
+        self.move_hand_by_motors_input(self._ShoulderMotor.get_x(), alpha1, alpha2)
 
+    def move_down(self, dist):
+        """
+
+        :param dist: distance to travel
+        :param time: time to travel it
+        """
+        self.move_up(-dist)
+
+    def hover_angle(self, angle):
+        """
+        :param angle: angle to get to
+        """
+        self.move_hand(self.get_x(), self.get_y(), angle)
 
 # if __name__ == '__main__':
 #     arm_motor = Motor(17, lambda alpha: alpha / 90)

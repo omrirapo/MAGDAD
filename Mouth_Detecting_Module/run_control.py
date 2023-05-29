@@ -5,7 +5,7 @@ from only_mouth import mouthing
 from time import sleep
 import pickle
 import RPi.GPIO as GPIO
-
+MOUTH_IN_DEGREES = 10
 MICRO_FRONT = 0
 MICRO_BACK = 0
 TOUCH = 0
@@ -123,10 +123,7 @@ def orient(arm: Arm, user_height, cam_height=0):
     mouther = mouthing()
     val = mouther()  # todo add an explaination
     while val is not None:
-        if val > 0:
-            arm.move_up()
-        elif val < 0:
-            arm.move_down()
+        arm.move_up_deg(val * MOUTH_IN_DEGREES)
         # arm.move_hand_by_motors_input(0, arm.get_alpha1() + val * 10, arm.get_alpha1() + val * 10) # todo what is 10
         t += 1
         val = mouther()
