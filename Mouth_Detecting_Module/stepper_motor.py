@@ -17,8 +17,8 @@ class StepperMotor:
     def __init__(self, DIR: int, STEP: int, steps_per_rotation: int, millis_per_angle: float = None):
         """
 
-        :param DIR:
-        :param STEP:
+        :param DIR: gpio_pin
+        :param STEP: gpio_pin
         :param steps_per_rotation:
         :param millis_per_angle:
         """
