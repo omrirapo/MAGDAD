@@ -10,12 +10,22 @@ MOVE_TIME = 0.001
 
 
 def _angle_to_radians(*angles):
+    """
+
+    :param angles: a number of angles in degrees
+    :return: the same angles in radians in a tuple, if from size 1, returns a number
+    """
     if len(angles) == 1:
         return angles[0] * math.pi / 180
     return tuple([angle * math.pi / 180 for angle in angles])
 
 
 def _radians_to_angle(*radians):
+    """
+
+    :param radians: a number of radians
+    :return: the same angles in degrees in a tuple, if from size 1, returns a number
+    """
     if len(radians) == 1:
         return radians[0] * 180 / math.pi
     return tuple([radian * 180 / math.pi for radian in radians])
@@ -24,6 +34,14 @@ def _radians_to_angle(*radians):
 class Arm:
 
     def __init__(self, wrist_motor: Motor, arm_motor: Motor, shoulder_motor: StepperMotor, d: float, r: float):
+        """
+
+        :param wrist_motor: the motor that moves the wrist as a Motor object
+        :param arm_motor: the motor that moves the arm as a Motor object
+        :param shoulder_motor: the stepper motor that moves the arm forward and backward as a StepperMotor object
+        :param d: the distance from the wrist to the end of the spoon in millimeters
+        :param r: the distance from the elbow to the wrist in millimeters
+        """
         self._WristMotor = wrist_motor
         self._ArmMotor = arm_motor
         self._ShoulderMotor = shoulder_motor
@@ -33,10 +51,10 @@ class Arm:
     def _coordinates_to_motor_input(self, x: float, y: float, alpha: float):
         """
 
-        :param x:
-        :param y:
-        :param alpha:
-        :return:
+        :param x: the x coordinate of the spoon in millimeters
+        :param y: the y coordinate of the spoon in millimeters
+        :param alpha: the angle of the spoon in angles
+        :return: the motor input needed to get to the given coordinates
         """
         x += self.d + self.r
         alpha = _angle_to_radians(alpha)
@@ -49,10 +67,10 @@ class Arm:
     def _motor_input_to_coordinates(self, l: float, alpha1: float, alpha2: float):
         """
 
-        :param l:
-        :param alpha1:
-        :param alpha2:
-        :return:
+        :param l: the distance that the arm is extended in millimeters(the distance that the shoulder motor moved)
+        :param alpha1: the angle of the arm in angles
+        :param alpha2: the angle of the wrist in angles
+        :return: the coordinates of the spoon
         """
         l -= self.d + self.r
         alpha1, alpha2 = _angle_to_radians(alpha1, alpha2)
@@ -64,11 +82,11 @@ class Arm:
 
     def move_hand_by_motors_input(self, l: float, alpha1: float, alpha2: float):
         """
-
-        :param l:
-        :param alpha1:
-        :param alpha2:
-        :return:
+        moves the hand to the given coordinates, moves all the motors accordingly
+        :param l: the distance that the arm is extended(the distance that the shoulder motor moved) in millimeters
+        :param alpha1: the angle of the arm motor in angles
+        :param alpha2: the angle of the wrist motor in angles
+        :return: True if the movement was successful, False otherwise
         """
 
         curr_arm_angle = self._ArmMotor.currAngle
@@ -83,17 +101,18 @@ class Arm:
                 return False
             if not self._WristMotor.move_to_angle(new_wrist_angle):
                 return False
-            if not self._ShoulderMotor.move_to_x(new_shoulder_position):
+            if not new_shoulder_position >=0:
                 return False
+            self._ShoulderMotor.move_to_x(new_shoulder_position)
             sleep(MOVE_TIME)
         return True
 
     def move_hand_by_angles(self, alpha1: float, alpha2: float):
         """
-
-        :param alpha1:
-        :param alpha2:
-        :return:
+        moves the hand to the given angles, the shoulder motor will not move
+        :param alpha1: the angle of the arm motor in angles
+        :param alpha2: the angle of the wrist motor in angles
+        :return: True if the movement was successful, False otherwise
         """
         curr_arm_angle = self._ArmMotor.currAngle
         curr_wrist_angle = self._WristMotor.currAngle
@@ -108,44 +127,45 @@ class Arm:
             sleep(MOVE_TIME)
         return True
 
-    def move_hand(self, x:float = None, y: float = None, alpha: float=None):
+    def move_hand(self, x: float = None, y: float = None, alpha: float = None):
         """
-
-        :param x:
-        :param y:
-        :param alpha:
-        :return:
+        moves the hand to the given coordinates, moves all the motors accordingly, defines the 0 of the coordinate
+         to be the end of the spoon when the arm is straight
+        :param x: the x coordinate of the spoon in millimeters
+        :param y: the y coordinate of the spoon in millimeters
+        :param alpha: the angle of the spoon in angles, positive means pointing up
+        :return: True if moved successfully, false otherwise
         """
         if not x:
-            x= self.get_x()
+            x = self.get_x()
         if not y:
-            y= self.get_y()
-        if not  alpha:
+            y = self.get_y()
+        if not alpha:
             alpha = self.get_alpha()
         return self.move_hand_by_motors_input(*self._coordinates_to_motor_input(x, y, alpha))
 
     def is_coordinates_possible(self, x: float, y: float, alpha: float):
         """
 
-        :param x:
-        :param y:
-        :param alpha:
-        :return:
+        :param x: the x coordinate in millimeters
+        :param y: the y coordinate in millimeters
+        :param alpha: the angle of the spoon in angles
+        :return: True if it is possible to move the arm to coordinates without Failing, False otherwise
         """
         l, alpha1, alpha2 = self._coordinates_to_motor_input(x, y, alpha)
         return self._ArmMotor.is_angle_possible(alpha1) and self._WristMotor.is_angle_possible(
-            alpha2)  # TODO add shoulder
+            alpha2) and l > 0
 
     def move_hand_in_angle_range(self, x: float, y: float, min_alpha: float, max_alpha: float,
                                  ideal_alpha: float = None):
         """
-
-        :param x:
-        :param y:
-        :param min_alpha:
-        :param max_alpha:
-        :param ideal_alpha:
-        :return:
+        tries to move to x,y in the range min_alpha to max_alpha. tries to find the angle that is closet to ideal_alpha
+        :param x: the x coordinate in millimeters
+        :param y: the y coordinate in millimeters
+        :param min_alpha: in angles
+        :param max_alpha: in angles
+        :param ideal_alpha: the angle that would be tried first, would choose the angle that is closest to ideal_alpha
+        :return: returns True if found an angle in the range that is possible to move to, False otherwise
         """
         if ideal_alpha is None:
             ideal_alpha = (min_alpha + max_alpha) / 2
@@ -164,50 +184,44 @@ class Arm:
     def get_coordinates(self):
         """
 
-        :return:
+        :return: a tuple of (x,y, alpha) when x is the x coordinate, t is the y coordinate and alpha is the angle,
+        all of the spoon
         """
         return self._motor_input_to_coordinates(self._ArmMotor.currAngle, self._WristMotor.currAngle,
                                                 self._ShoulderMotor.get_x())
 
-    def get_mouth_distance(self):
-        """
-
-        :return:
-        """
-        pass
-
     def get_x(self):
         """
 
-        :return:
+        :return: the x coordinate in millimeters
         """
         return self.get_coordinates()[0]
 
     def get_y(self):
         """
 
-        :return:
+        :return: the y coordinate in millimeters
         """
         return self.get_coordinates()[1]
 
     def get_alpha(self):
         """
 
-        :return:
+        :return: the angle of the spoon in angles
         """
         return self.get_coordinates()[2]
 
     def get_alpha1(self):
         """
 
-        :return:
+        :return: the angle of the arm motor in angles
         """
         return self._ArmMotor.currAngle
 
     def get_alpha2(self):
         """
 
-        :return:
+        :return:  the angle of the wrist motor in angles
         """
         return self._WristMotor.currAngle
 
@@ -255,7 +269,20 @@ class Arm:
 
     def hover_angle(self, angle):
         """
+        changes the angle of the spoon without changing the x and y coordinates
         :param angle: angle to get to
         """
         self.move_hand(self.get_x(), self.get_y(), angle)
 
+
+if __name__ == '__main__':
+    d = 89.142  # from the wrist to the end of the spoon
+    r = 129.5  # the length from the elbow to the wrist
+    arm_motor = Motor(9, lambda alpha: alpha / 90)
+    wrist_motor = Motor(25, lambda alpha: alpha / 90)
+    shoulder_motor = StepperMotor(3, 2, 200, 131.34)
+    arm = Arm(wrist_motor, arm_motor, shoulder_motor, d, r)
+    shoulder_motor.move_to_angle(90)
+
+    # sleep(2)
+    # print(arm.move_hand(10, 90, 90))

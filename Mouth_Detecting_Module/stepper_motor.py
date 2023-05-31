@@ -17,10 +17,10 @@ class StepperMotor:
     def __init__(self, DIR: int, STEP: int, steps_per_rotation: int, millis_per_angle: float = None):
         """
 
-        :param DIR: gpio_pin
-        :param STEP: gpio_pin
-        :param steps_per_rotation:
-        :param millis_per_angle:
+        :param DIR: a gpio pin number that is connected to the DIR pin of the stepper motor, tells the motor to move CW or CCW
+        :param STEP: a gpio pin number that is connected to the STEP pin of the stepper motor, tells the motor to move one step
+        :param steps_per_rotation: the number of steps the motor needs to do to make a full rotation
+        :param millis_per_angle: the amount of millimeters the motor needs to move to make a 1 degree rotation
         """
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(DIR, GPIO.OUT)
@@ -36,10 +36,10 @@ class StepperMotor:
         self.wait_per_step = None
         self._running_continues = False
 
-    def _step(self):
+    def step(self):
         """
 
-        :return:
+        does one step
         """
         GPIO.output(self._STEP, GPIO.HIGH)
         sleep(DELAY)
@@ -48,9 +48,8 @@ class StepperMotor:
 
     def move_to_angle(self, new_angle):
         """
-
-        :param new_angle:
-        :return:
+        moves the motor to a new angle
+        :param new_angle: the new angle to move to in degrees
         """
         rotations = (new_angle - self.angle) / 360
         steps = round(self._steps_per_rotation * rotations)
@@ -66,27 +65,40 @@ class StepperMotor:
         self.angle = new_angle
 
     def get_angle(self):
+        """
+
+        :return: the current angle of the motor in degrees
+        """
         return self.angle
 
     def move_to_x(self, new_x):
         """
-        :param new_x: in millis
+        moves the motor to a new x
+        :param new_x: in millimeters
         """
         if self._millis_per_angle is None:
             raise Exception("millis_per_angle is None")
         self.move_to_angle(((new_x - self.get_x()) / self._millis_per_angle))
 
     def _set_x(self, new_x):
+        """
+        sets the x of the motor without moving it
+        :param new_x: the new x in millimeters
+        """
         if self._millis_per_angle is None:
             raise Exception("millis_per_angle is None")
         self._set_angle(((new_x - self.get_x()) / self._millis_per_angle))
 
     def _set_angle(self, new_angle):
+        """
+        sets the angle of the motor without moving it
+        :param new_angle: the new angle in degrees
+        """
         self.angle = new_angle
 
     def get_x(self):
         """
-
+        the current x of the motor in millimeters
         :return: x in millis
         """
         if self._millis_per_angle is None:
@@ -94,6 +106,11 @@ class StepperMotor:
         return self.angle * self._millis_per_angle
 
     def _dist_to_steps(self, dist):
+        """
+        converts a distance in millimeters to steps
+        :param dist: the distance in millimeters
+        :return: the number of steps needed to move the distance
+        """
         return round(dist * self._steps_per_rotation / (self._millis_per_angle * 360))
 
     def move(self, dist, duration):

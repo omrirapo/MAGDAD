@@ -204,11 +204,10 @@ def flow():
 
     arm_motor = Motor(SERVO_ARM, lambda alpha: alpha / 90)
     wrist_motor = Motor(SERVO_WRIST, lambda alpha: alpha / 90)
-    shoulder_motor = StepperMotor(20, 21, 200, 131.34)
-    arm = Arm(arm_motor, wrist_motor, shoulder_motor, d, r)  # todo explain the constants
+    shoulder_motor = StepperMotor(20, 21, 200, 131.34) # todo change the constants, and move them into variables with names
+    arm = Arm(arm_motor, wrist_motor, shoulder_motor, d, r)
 
     # wait for input - set bowl.
-
     # call gather food
 
     # call orient
