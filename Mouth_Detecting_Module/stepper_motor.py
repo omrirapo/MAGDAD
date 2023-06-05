@@ -14,13 +14,13 @@ CCW = 0
 
 
 class StepperMotor:
-    def __init__(self, DIR: int, STEP: int, steps_per_rotation: int, millis_per_angle: float = None):
+    def __init__(self, DIR: int, STEP: int, steps_per_rotation: int, mm_per_angle: float = None):
         """
 
         :param DIR: a gpio PIN that is connected to the DIR pin of the stepper motor, tells the motor to move CW or CCW
         :param STEP: a gpio PIN that is connected to the STEP pin of the stepper motor, tells the motor to move one step
         :param steps_per_rotation: the number of steps the motor needs to do to make a full rotation
-        :param millis_per_angle: the amount of millimeters the motor needs to move to make a 1 degree rotation
+        :param mm_per_angle: the amount of millimeters the motor needs to move to make a 1 degree rotation
         """
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(DIR, GPIO.OUT)
@@ -30,7 +30,7 @@ class StepperMotor:
         self._DIR = DIR
         self._STEP = STEP
         self._steps_per_rotation = steps_per_rotation
-        self._millis_per_angle = millis_per_angle
+        self._millis_per_angle = mm_per_angle
         self.angle = 0
         self._speed = 0
         self.wait_per_step = None
@@ -52,7 +52,9 @@ class StepperMotor:
         :param new_angle: the new angle to move to in degrees
         """
         rotations = (new_angle - self.angle) / 360
+        #print(f"rotations: {rotations}, angle: {self.angle}, new_angle: {new_angle}")
         steps = round(self._steps_per_rotation * rotations)
+        self.angle += (steps/self._steps_per_rotation)*360
         if rotations > 0:
             GPIO.output(self._DIR, CW)
 
@@ -62,7 +64,7 @@ class StepperMotor:
         for i in range(steps):
             self.step()
 
-        self.angle = new_angle
+
 
     def get_angle(self):
         """
@@ -78,7 +80,7 @@ class StepperMotor:
         """
         if self._millis_per_angle is None:
             raise Exception("millis_per_angle is None")
-        self.move_to_angle(((new_x - self.get_x()) / self._millis_per_angle))
+        self.move_to_angle((new_x / self._millis_per_angle))
 
     def reset_location(self):
         """

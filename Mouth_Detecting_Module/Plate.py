@@ -1,5 +1,5 @@
 import stepper_motor
-from Mouth_Detecting_Module.Arm import Arm
+from Arm import Arm
 
 
 class Plates:

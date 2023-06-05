@@ -56,11 +56,10 @@ class Arm:
         :param alpha: the angle of the spoon in angles
         :return: the motor input needed to get to the given coordinates
         """
-        x += self.d + self.r
         alpha = _angle_to_radians(alpha)
         alpha1 = math.asin((y - self.d * math.sin(alpha)) / self.r)
         alpha2 = (alpha1 - alpha)
-        l = x - self.r * math.cos(alpha1 / 2) - self.d * math.sin(alpha / 2)
+        l = x + self.d + self.r - self.r * math.cos(alpha1) - self.d * math.cos(alpha)
         alpha1, alpha2 = _radians_to_angle(alpha1, alpha2)
         return l, alpha1, alpha2
 
@@ -88,11 +87,11 @@ class Arm:
         :param alpha2: the angle of the wrist motor in angles
         :return: True if the movement was successful, False otherwise
         """
-
         curr_arm_angle = self._ArmMotor.currAngle
         curr_wrist_angle = self._WristMotor.currAngle
         curr_shoulder_position = self._ShoulderMotor.get_x()
-        num_of_steps = 10
+        num_of_steps = int((abs(curr_wrist_angle - alpha1) + abs(curr_wrist_angle - alpha2)) / 2) + int(abs(
+            curr_shoulder_position - l))
         for i in range(1, num_of_steps + 1):
             new_arm_angle = curr_arm_angle + i * (alpha1 - curr_arm_angle) / num_of_steps
             new_wrist_angle = curr_wrist_angle + i * (alpha2 - curr_wrist_angle) / num_of_steps
@@ -101,7 +100,7 @@ class Arm:
                 return False
             if not self._WristMotor.move_to_angle(new_wrist_angle):
                 return False
-            if not new_shoulder_position >=0:
+            if new_shoulder_position < 0:
                 return False
             self._ShoulderMotor.move_to_x(new_shoulder_position)
             sleep(MOVE_TIME)
@@ -136,12 +135,14 @@ class Arm:
         :param alpha: the angle of the spoon in angles, positive means pointing up
         :return: True if moved successfully, false otherwise
         """
-        if not x:
+        if x == None:
             x = self.get_x()
-        if not y:
+        if y == None:
             y = self.get_y()
-        if not alpha:
+        if alpha == None:
             alpha = self.get_alpha()
+        # print(
+        #     f"l = {self._coordinates_to_motor_input(x, y, alpha)[0]}, alpha1 = {self._coordinates_to_motor_input(x, y, alpha)[1]}, alpha2 = {self._coordinates_to_motor_input(x, y, alpha)[2]}")
         return self.move_hand_by_motors_input(*self._coordinates_to_motor_input(x, y, alpha))
 
     def is_coordinates_possible(self, x: float, y: float, alpha: float):

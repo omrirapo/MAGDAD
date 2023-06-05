@@ -28,7 +28,7 @@ PLATTER_STP = 0
 # dimensions
 CAMHEIGHT = 20
 # arm lengths
-d = 89.142  # from the wrist to the end of the spoon
+d = 138.44  # from the wrist to the end of the spoon
 r = 129.5  # the length from the elbow to the wrist
 
 # histogram
