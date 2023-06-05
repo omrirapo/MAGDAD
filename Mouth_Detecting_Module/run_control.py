@@ -6,6 +6,7 @@ from time import sleep
 from Plate import Plates
 import pickle
 import RPi.GPIO as GPIO
+
 MOUTH_IN_DEGREES = 10
 MICRO_FRONT = 0
 MICRO_BACK = 0
@@ -47,7 +48,6 @@ pin_mangement = {
     25: "servo_wrist",
     27: "dirbowl",
     24: "plates_micro_switch",
-
 
     # 24: "changefood",
     # 25: "emergency",
@@ -171,7 +171,8 @@ def start_all_buttons():
     initialize_buttons(button_pins["bring_food"], GPIO.RISING)
     initialize_buttons(button_pins["back"], GPIO.RISING)
 
-def init_platter() :
+
+def init_platter():
     """
 
     :return:
@@ -181,11 +182,9 @@ def init_platter() :
     iner_radi = 60
     outer_radi = 120
     stps = 0
-    plat_mot = StepperMotor(0,0,stps) # todo fill in the constants for the motors
-    turn_mot = StepperMotor(0,0,stps) # todo fill in the constants for the motors
-    platter = Plates(lower_height,upper_height,iner_radi,outer_radi, plat_mot, turn_mot)
-
-
+    plat_mot = StepperMotor(0, 0, stps)  # todo fill in the constants for the motors
+    turn_mot = StepperMotor(0, 0, stps)  # todo fill in the constants for the motors
+    platter = Plates(lower_height, upper_height, iner_radi, outer_radi, plat_mot, turn_mot)
 
 
 def flow():
@@ -197,14 +196,13 @@ def flow():
     start_all_buttons()
 
     # todo initialise user preferances
-    #initialise plate:
-
+    # initialise plate:
 
     # initialise arm
-
     arm_motor = Motor(SERVO_ARM, lambda alpha: alpha / 90)
     wrist_motor = Motor(SERVO_WRIST, lambda alpha: alpha / 90)
-    shoulder_motor = StepperMotor(20, 21, 200, 131.34) # todo change the constants, and move them into variables with names
+    shoulder_motor = StepperMotor(20, 21, 200,
+                                  131.34)  # todo change the constants, and move them into variables with names
     arm = Arm(arm_motor, wrist_motor, shoulder_motor, d, r)
 
     # wait for input - set bowl.

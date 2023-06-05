@@ -17,8 +17,8 @@ class StepperMotor:
     def __init__(self, DIR: int, STEP: int, steps_per_rotation: int, millis_per_angle: float = None):
         """
 
-        :param DIR: a gpio pin number that is connected to the DIR pin of the stepper motor, tells the motor to move CW or CCW
-        :param STEP: a gpio pin number that is connected to the STEP pin of the stepper motor, tells the motor to move one step
+        :param DIR: a gpio PIN that is connected to the DIR pin of the stepper motor, tells the motor to move CW or CCW
+        :param STEP: a gpio PIN that is connected to the STEP pin of the stepper motor, tells the motor to move one step
         :param steps_per_rotation: the number of steps the motor needs to do to make a full rotation
         :param millis_per_angle: the amount of millimeters the motor needs to move to make a 1 degree rotation
         """
@@ -60,7 +60,7 @@ class StepperMotor:
             GPIO.output(self._DIR, CCW)
             steps *= -1
         for i in range(steps):
-            self._step()
+            self.step()
 
         self.angle = new_angle
 
@@ -79,6 +79,14 @@ class StepperMotor:
         if self._millis_per_angle is None:
             raise Exception("millis_per_angle is None")
         self.move_to_angle(((new_x - self.get_x()) / self._millis_per_angle))
+
+    def reset_location(self):
+        """
+        resets the location stored to 0. this does not move the motor, only changes the stored location. for reseting the
+        motor when is in the wanted 0 position.
+        :return:
+        """
+        self._set_angle(0)
 
     def _set_x(self, new_x):
         """
@@ -127,6 +135,6 @@ class StepperMotor:
         wait_time = duration / num_of_steps
         for _ in range(num_of_steps):
             cur_time = time.time()
-            self._step()
+            self.step()
             sleep(wait_time - (time.time() - cur_time))
-        self._set_x(self.get_x()+dist)
+        self._set_x(self.get_x() + dist)
