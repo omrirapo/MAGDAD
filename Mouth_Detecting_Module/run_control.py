@@ -219,6 +219,22 @@ def flow():
     # call turn bowls a bit
 
 
+def alpha_feeding(arm):
+    """
+    lifts food, and feeds the user, this the first method we use and  hence the alpha version of feeding
+    """
+    arm.move_hand(-40, -120, -45)
+    arm.move_hand(-40, -140, -50)
+    arm.move_hand(-55, -160, -60)
+    arm.move_hand(-70, -160, -60)
+    arm.move_hand(-50, -180, -60)
+    arm.move_hand(-30, -180, -60)
+    arm.move_hand(0, -160, -40)
+    arm.move_hand(0, -60, 0)
+    arm.move_hand(0, 0, 0)
+    arm.move_hand(450, 0, 0)
+
+
 if __name__ == '__main__':
     orient("")
     move_till_touch(lambda: False)

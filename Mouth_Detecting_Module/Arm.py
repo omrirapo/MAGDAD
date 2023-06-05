@@ -104,7 +104,7 @@ class Arm:
                 return False
             self._ShoulderMotor.move_to_x(new_shoulder_position)
             sleep(MOVE_TIME)
-        return True
+        return self.get_coordinates()
 
     def move_hand_by_angles(self, alpha1: float, alpha2: float):
         """
@@ -143,7 +143,10 @@ class Arm:
             alpha = self.get_alpha()
         # print(
         #     f"l = {self._coordinates_to_motor_input(x, y, alpha)[0]}, alpha1 = {self._coordinates_to_motor_input(x, y, alpha)[1]}, alpha2 = {self._coordinates_to_motor_input(x, y, alpha)[2]}")
-        return self.move_hand_by_motors_input(*self._coordinates_to_motor_input(x, y, alpha))
+        if not self.move_hand_by_motors_input(*self._coordinates_to_motor_input(x, y, alpha)):
+            return False
+        return self._ArmMotor.currAngle, self._WristMotor.currAngle, self._ShoulderMotor.get_x()
+
 
     def is_coordinates_possible(self, x: float, y: float, alpha: float):
         """
