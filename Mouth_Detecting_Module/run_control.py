@@ -129,12 +129,12 @@ def orient(arm: Arm, user_height, cam_height=0):
         t += 1
         val = mouther()
 
-    sleep(0.5)
-    cams = arm.get_y()
+#    cams = arm.get_y()
     arm.move_hand(arm.get_x(), arm.get_y() + cam_height, 0)
+    sleep(0.5)
 
     print("finished orient")
-    return cams
+    return arm.get_y()
     # db[name] = arm.get_alpha1()
 
     # with open('DB', 'ab') as dbfile:
@@ -207,12 +207,13 @@ def flow():
 
     # wait for input - set bowl.
     # call gather food
+    alpha_feeding(arm)
 
     # call orient
 
     mouth_height.append(orient(arm, mouth_height[-1], CAMHEIGHT))
 
-    move_till_touch(arm)
+    move_till_touch(arm,4,0.05)
 
     # go back
 
@@ -236,5 +237,4 @@ def alpha_feeding(arm):
 
 
 if __name__ == '__main__':
-    orient("")
-    move_till_touch(lambda: False)
+    flow()
