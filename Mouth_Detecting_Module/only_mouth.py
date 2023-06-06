@@ -1,6 +1,6 @@
 import cv2
 
-DELTA = 0.1
+DELTA = 0.3
 
 
 def restrict_to_target(target, obj_arr):
@@ -85,10 +85,7 @@ def mouthing():
             for (x, y, w, h) in mouth_rects:
 
                 y = int(y - 0.15 * h)
-                cv2.circle(frame, (x + (w // 2), y + (h // 2)), 5, (255, 0, 0))
-                cv2.circle(frame, (width // 4, height // 4), 5, (0, 255, 0))
-                test_start = True
-                cv2.imshow('Mouth Detector', frame)
+
                 _y = y + h // 2
                 if abs(height // 4 - _y) / h > DELTA:
                     return float((height // 4 - _y) / h)
