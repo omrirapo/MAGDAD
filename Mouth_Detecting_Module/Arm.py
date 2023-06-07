@@ -6,8 +6,6 @@ from time import sleep
 import time
 from math import cos, sin
 
-MOVE_TIME = 0.001
-
 
 def _angle_to_radians(*angles):
     """
@@ -79,23 +77,27 @@ class Arm:
         alpha = _radians_to_angle(alpha)
         return x, y, alpha
 
-    def move_hand_by_motors_input(self, l: float, alpha1: float, alpha2: float):
+    def move_to_minimal_x(self):
+        self._ShoulderMotor.move_to_x(0)
+
+    def move_hand_by_motors_input(self, l: float, alpha1: float, alpha2: float, wait_between_steps=0.001):
         """
         moves the hand to the given coordinates, moves all the motors accordingly
         :param l: the distance that the arm is extended(the distance that the shoulder motor moved) in millimeters
         :param alpha1: the angle of the arm motor in angles
         :param alpha2: the angle of the wrist motor in angles
+        :param wait_between_steps: the time to wait between each step in seconds
         :return: True if the movement was successful, False otherwise
         """
         curr_arm_angle = self._ArmMotor.currAngle
         curr_wrist_angle = self._WristMotor.currAngle
         curr_shoulder_position = self._ShoulderMotor.get_x()
-        num_of_steps = int((abs(curr_wrist_angle - alpha1) + abs(curr_wrist_angle - alpha2)) / 2) + int(abs(
+        num_of_steps = int((abs(curr_wrist_angle - alpha1)) + int(abs(curr_wrist_angle - alpha2))) + int(abs(
             curr_shoulder_position - l))
-        for i in range(1, num_of_steps + 1):
-            new_arm_angle = curr_arm_angle + i * (alpha1 - curr_arm_angle) / num_of_steps
-            new_wrist_angle = curr_wrist_angle + i * (alpha2 - curr_wrist_angle) / num_of_steps
-            new_shoulder_position = curr_shoulder_position + i * (l - curr_shoulder_position) / num_of_steps
+        for i in range(1, num_of_steps):
+            new_arm_angle = curr_arm_angle + (alpha1 - curr_arm_angle) * (i / num_of_steps)
+            new_wrist_angle = curr_wrist_angle + (alpha2 - curr_wrist_angle) * (i / num_of_steps)
+            new_shoulder_position = curr_shoulder_position + (l - curr_shoulder_position) * (i / num_of_steps)
             if not self._ArmMotor.move_to_angle(new_arm_angle):
                 return False
             if not self._WristMotor.move_to_angle(new_wrist_angle):
@@ -103,14 +105,22 @@ class Arm:
             if new_shoulder_position < 0:
                 return False
             self._ShoulderMotor.move_to_x(new_shoulder_position)
-            sleep(MOVE_TIME)
+            sleep(wait_between_steps)
+        if not self._ArmMotor.move_to_angle(alpha1):
+            return False
+        if not self._WristMotor.move_to_angle(alpha2):
+            return False
+        if l < 0:
+            return False
+        self._ShoulderMotor.move_to_x(l)
         return self.get_coordinates()
 
-    def move_hand_by_angles(self, alpha1: float, alpha2: float):
+    def move_hand_by_angles(self, alpha1: float, alpha2: float, wait_between_steps=0.001):
         """
         moves the hand to the given angles, the shoulder motor will not move
         :param alpha1: the angle of the arm motor in angles
         :param alpha2: the angle of the wrist motor in angles
+        :param wait_between_steps: the time to wait between each step in seconds
         :return: True if the movement was successful, False otherwise
         """
         curr_arm_angle = self._ArmMotor.currAngle
@@ -123,30 +133,31 @@ class Arm:
                 return False
             if not self._WristMotor.move_to_angle(new_wrist_angle):
                 return False
-            sleep(MOVE_TIME)
+            sleep(wait_between_steps)
         return True
 
-    def move_hand(self, x: float = None, y: float = None, alpha: float = None):
+    def move_hand(self, x: float = None, y: float = None, alpha: float = None, wait_between_steps=0.001):
         """
         moves the hand to the given coordinates, moves all the motors accordingly, defines the 0 of the coordinate
          to be the end of the spoon when the arm is straight
+        :param wait_between_steps:
         :param x: the x coordinate of the spoon in millimeters
         :param y: the y coordinate of the spoon in millimeters
         :param alpha: the angle of the spoon in angles, positive means pointing up
+        :param wait_between_steps: the time to wait between each step in seconds
         :return: True if moved successfully, false otherwise
         """
-        if x == None:
+        if x is None:
             x = self.get_x()
-        if y == None:
+        if y is None:
             y = self.get_y()
-        if alpha == None:
+        if alpha is None:
             alpha = self.get_alpha()
         # print(
         #     f"l = {self._coordinates_to_motor_input(x, y, alpha)[0]}, alpha1 = {self._coordinates_to_motor_input(x, y, alpha)[1]}, alpha2 = {self._coordinates_to_motor_input(x, y, alpha)[2]}")
-        if not self.move_hand_by_motors_input(*self._coordinates_to_motor_input(x, y, alpha)):
+        if not self.move_hand_by_motors_input(*self._coordinates_to_motor_input(x, y, alpha), wait_between_steps):
             return False
         return self._ArmMotor.currAngle, self._WristMotor.currAngle, self._ShoulderMotor.get_x()
-
 
     def is_coordinates_possible(self, x: float, y: float, alpha: float):
         """
@@ -215,6 +226,13 @@ class Arm:
         """
         return self.get_coordinates()[2]
 
+    def get_l(self):
+        """
+
+        :return: the length of the arm in millimeters
+        """
+        return self._ShoulderMotor.get_x()
+
     def get_alpha1(self):
         """
 
@@ -229,21 +247,21 @@ class Arm:
         """
         return self._WristMotor.currAngle
 
-    def move_forward(self, dist, time):
+    def move_forward(self, dist):
         """
 
         :param dist: distance to travel
         :param time: time to travel it
         """
-        self._ShoulderMotor.move(-dist, time)
+        self._ShoulderMotor.move_to_x(dist+self._ShoulderMotor.get_x())
 
-    def move_backward(self, dist, time):
+    def move_backward(self, dist):
         """
 
         :param dist: distance to travel
         :param time: time to travel it
         """
-        self._ShoulderMotor.move(dist, time)
+        self.move_forward(-dist)
 
     def move_up_deg(self, dist):
         """

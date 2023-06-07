@@ -1,10 +1,12 @@
+from time import sleep
+
 import stepper_motor
 from Arm import Arm
 
 
 class Plates:
 
-    def __init__(self, lower_height, dx, upper_height, iner_radi, outer_radi, platter_mot: stepper_motor,
+    def __init__(self, platter_mot: stepper_motor,
                  turn_mot: stepper_motor):
         """
 
@@ -73,8 +75,31 @@ class Plates:
         # go back a bit
         # go up
         dx =30
-        arm.move_hand(self.dx, self.bottom, 90)
-        arm.move_hand(x=arm.get_x()+ self.iner_radi, alpha= 45)
-        arm.move_hand(y= arm.get_y()+self.lip_height,alpha= 20)
-        arm.move_hand(x=arm.get_x()-self.iner_radi,alpha= 0)
-        arm.move_hand(y= arm.get_y()+self.lip_height)
+        # arm.move_hand(self.dx, self.bottom, 90)
+        # arm.move_hand(x=arm.get_x()+ self.iner_radi, alpha= 45)
+        # arm.move_hand(y= arm.get_y()+self.lip_height,alpha= 20)
+        # arm.move_hand(x=arm.get_x()-self.iner_radi,alpha= 0)
+        # arm.move_hand(y= arm.get_y()+self.lip_height)
+        # arm.move_hand(x=arm.get_x()-self.iner_radi,alpha= -45)
+        print(arm.move_hand(0, 0, 0))
+        print(arm.move_hand_by_motors_input(0, 30, 45))
+        sleep(0.2)
+
+        print(arm.move_hand_by_motors_input(0, -20, 45))
+        print(arm.move_hand(-85, -180, -60))
+        sleep(0.2)
+
+        print(arm.move_hand(-30, -180, -60))
+        sleep(0.2)
+        print(arm.move_hand(-30, -180, -30))
+
+        print(arm.move_hand_by_motors_input(0, arm.get_alpha1(), arm.get_alpha2()))
+        print(arm.move_hand(-20, -180, -40))
+        sleep(2)
+
+        print(arm.move_hand(-10, -80, 0))
+        # sleep(0.2)
+
+        print(arm.move_hand(0, 0, 0))
+
+

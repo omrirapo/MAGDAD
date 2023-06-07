@@ -1,6 +1,6 @@
-import cv2
+import                                                                                                                                                                                                                                                      cv2
 
-DELTA = 0.3
+DELTA = 0.1
 
 
 def restrict_to_target(target, obj_arr):
@@ -86,6 +86,7 @@ def mouthing():
 
                 y = int(y - 0.15 * h)
 
+                test_start = True
                 _y = y + h // 2
                 if abs(height // 4 - _y) / h > DELTA:
                     return float((height // 4 - _y) / h)

@@ -7,19 +7,19 @@ from Plate import Plates
 import pickle
 import RPi.GPIO as GPIO
 
-MOUTH_IN_DEGREES = 10
+MOUTH_IN_DEGREES = 5
 MICRO_FRONT = 0
 MICRO_BACK = 0
-TOUCH = 0
+TOUCH = 11
 PLATE_MICRO_SWITCH = 0
 CHANGE_FOOD = 0
 EMERGENCY = 0
 BRING_FOOD = 0
 BACK = 0
-SERVO_ARM = 17
-SERVO_WRIST = 18
-SHOULDER_DIR = 0
-SHOULDER_STP = 0
+SERVO_ARM = 9
+SERVO_WRIST = 25
+SHOULDER_DIR = 3
+SHOULDER_STP = 2
 BOWL_DIR = 0
 BOWL_STP = 0
 PLATTER_DIR = 0
@@ -78,7 +78,6 @@ def initialize_buttons(button, direction):
     :param direction: GPIO.risng\falling
     :return:
     """
-    button = pin_mangement[button]
     GPIO.setmode(GPIO.BCM)
 
     # Set the touch sensor pin as an input with a pull-up resistor
@@ -95,7 +94,7 @@ def clear_button(button):
     GPIO.remove_event_detect(pin_mangement[button])
 
 
-def orient(arm: Arm, user_height, cam_height=0):
+def orient(arm: Arm, user_height=0, cam_height=0):
     """
 
     :param arm: arm Obj
@@ -124,17 +123,23 @@ def orient(arm: Arm, user_height, cam_height=0):
     mouther = mouthing()
     val = mouther()  # todo add an explaination
     while val is not None:
-        arm.move_up_deg(val * MOUTH_IN_DEGREES)
+        try:
+            arm.move_up_deg(val * MOUTH_IN_DEGREES)
+        except Exception as e:
+            print(e)
+
+
         # arm.move_hand_by_motors_input(0, arm.get_alpha1() + val * 10, arm.get_alpha1() + val * 10) # todo what is 10
         t += 1
         val = mouther()
+        sleep(0.1)
 
-#    cams = arm.get_y()
-    arm.move_hand(arm.get_x(), arm.get_y() + cam_height, 0)
     sleep(0.5)
+    cams = arm.get_y()
+    arm.move_up(cam_height)
 
     print("finished orient")
-    return arm.get_y()
+    return cams
     # db[name] = arm.get_alpha1()
 
     # with open('DB', 'ab') as dbfile:
@@ -150,11 +155,11 @@ def move_till_touch(arm: Arm, dist, time):
     :param arm: arm object
     :return:
     """
-    initialize_buttons(button_pins["touch"], GPIO.RISING)
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(TOUCH, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-    while not button_pins["touch"]:
-        speed = 0.2 + 0.8 * (mouth_dist[-1] - arm.get_x()) / mouth_dist[-1]  # poprtional to history
-        arm.move_forward(dist, time)
+    while not GPIO.input(TOUCH):
+        arm.move_forward(dist)
     mouth_dist.append(arm.get_x())
 
 
@@ -177,14 +182,10 @@ def init_platter():
 
     :return:
     """
-    lower_height = -200
-    upper_height = 40
-    iner_radi = 60
-    outer_radi = 120
-    stps = 0
-    plat_mot = StepperMotor(0, 0, stps)  # todo fill in the constants for the motors
-    turn_mot = StepperMotor(0, 0, stps)  # todo fill in the constants for the motors
-    platter = Plates(lower_height, upper_height, iner_radi, outer_radi, plat_mot, turn_mot)
+
+    plat_mot = StepperMotor(27, 18, 200)  # todo fill in the constants for the motors
+    turn_mot = StepperMotor(23, 22, 200)  # todo fill in the constants for the motors
+    return Plates(plat_mot, turn_mot)
 
 
 def flow():
@@ -193,28 +194,24 @@ def flow():
     :return: none
     """
     # define buttons
-    start_all_buttons()
 
     # todo initialise user preferances
     # initialise plate:
 
     # initialise arm
-    arm_motor = Motor(SERVO_ARM, lambda alpha: alpha / 90)
-    wrist_motor = Motor(SERVO_WRIST, lambda alpha: alpha / 90)
-    shoulder_motor = StepperMotor(20, 21, 200,
-                                  131.34)  # todo change the constants, and move them into variables with names
+    arm_motor = Motor(SERVO_ARM, lambda alpha: alpha / 45)
+    wrist_motor = Motor(SERVO_WRIST, lambda alpha: alpha / 45)
+    shoulder_motor = StepperMotor(3, 2, 200,
+                                  0.367)  # todo change the constants, and move them into variables with names
     arm = Arm(arm_motor, wrist_motor, shoulder_motor, d, r)
+    platter = init_platter()
+    platter.gather_food(arm)
+    orient(arm, 0, CAMHEIGHT)
 
-    # wait for input - set bowl.
-    # call gather food
-    alpha_feeding(arm)
+    mouth_height.append(orient(arm, 0, CAMHEIGHT))
 
-    # call orient
-
-    mouth_height.append(orient(arm, mouth_height[-1], CAMHEIGHT))
-
-    move_till_touch(arm,4,0.05)
-
+    move_till_touch(arm, 10, 0.5)
+    arm.move_hand(0, 0, 0)
     # go back
 
     # call turn bowls a bit
@@ -225,15 +222,28 @@ def alpha_feeding(arm):
     lifts food, and feeds the user, this the first method we use and  hence the alpha version of feeding
     """
     arm.move_hand(-40, -120, -45)
+    sleep(2)
     arm.move_hand(-40, -140, -50)
+    sleep(2)
     arm.move_hand(-55, -160, -60)
+    sleep(2)
     arm.move_hand(-70, -160, -60)
+    sleep(2)
     arm.move_hand(-50, -180, -60)
+    sleep(2)
     arm.move_hand(-30, -180, -60)
+    sleep(2)
     arm.move_hand(0, -160, -40)
+    sleep(2)
     arm.move_hand(0, -60, 0)
+    sleep(2)
     arm.move_hand(0, 0, 0)
+    sleep(2)
     arm.move_hand(450, 0, 0)
+    sleep(2)
+
+
+def beta_feeding(arm): pass
 
 
 if __name__ == '__main__':

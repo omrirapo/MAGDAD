@@ -129,7 +129,7 @@ class StepperMotor:
         :param dist: the distance in millis
         :param duration: the time to move
         """
-        if dist == 0:
+        if self._dist_to_steps(dist) == 0:
             return
         if duration == 0:
             self.move_to_x(self.get_x() + dist)
