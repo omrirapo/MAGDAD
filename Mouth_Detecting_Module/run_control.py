@@ -6,48 +6,21 @@ from time import sleep
 from Plate import Plates
 import pickle
 import RPi.GPIO as GPIO
+from consts import *
 
-MOUTH_IN_DEGREES = 5
-MICRO_FRONT = 0
-MICRO_BACK = 0
-TOUCH = 11
-PLATE_MICRO_SWITCH = 0
-CHANGE_FOOD = 0
-EMERGENCY = 0
-BRING_FOOD = 0
-BACK = 0
-SERVO_ARM = 9
-SERVO_WRIST = 25
-SHOULDER_DIR = 3
-SHOULDER_STP = 2
-BOWL_DIR = 0
-BOWL_STP = 0
-PLATTER_DIR = 0
-PLATTER_STP = 0
-
-# dimensions
-CAMHEIGHT = 20
-# arm lengths
-d = 138.44  # from the wrist to the end of the spoon
-r = 129.5  # the length from the elbow to the wrist
-
-# histogram
-mouth_height = []
-mouth_dist = []
 
 pin_mangement = {
-    2: "stpshoulder",
-    3: "dirshoulder",
-    4: "micro_front",
-    9: "servo_arm",
-    11: "touch",
-    12: "stpbowl",
-    17: "micro_back",
-    22: "stpplatter",
-    23: "dirplatter",
-    25: "servo_wrist",
-    27: "dirbowl",
-    24: "plates_micro_switch",
+    SHOULDER_STP: "stpshoulder",
+    SHOULDER_DIR: "dirshoulder",
+    MICRO_FRONT: "micro_front",
+    SERVO_ARM: "servo_arm",
+    TOUCH: "touch",
+    BOWL_STP: "stpbowl",
+    MICRO_BACK: "micro_back",
+    PLATTER_STP: "stpplatter",
+    PLATTER_DIR: "dirplatter",
+    SERVO_WRIST: "servo_wrist",
+    BOWL_DIR: "dirbowl",
 
     # 24: "changefood",
     # 25: "emergency",
@@ -206,9 +179,9 @@ def flow():
     arm = Arm(arm_motor, wrist_motor, shoulder_motor, d, r)
     platter = init_platter()
     platter.gather_food(arm)
-    orient(arm, 0, CAMHEIGHT)
+    orient(arm, 0, CAM_HEIGHT)
 
-    mouth_height.append(orient(arm, 0, CAMHEIGHT))
+    mouth_height.append(orient(arm, 0, CAM_HEIGHT))
 
     move_till_touch(arm, 10, 0.5)
     arm.move_hand(0, 0, 0)
