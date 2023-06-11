@@ -7,7 +7,9 @@ import os
 import shutil
 
 
-def send_email(sender_email = "alinmagdad@outlook.com", sender_password = "yogev&0mri", recipient_email = "alinmagdad@outlook.com",cc_emails = None, subject = "", message = None, attachment_path = None):
+def send_email(sender_email="alinmagdad@outlook.com", sender_password="yogev&0mri",
+               recipient_email="alinmagdad@outlook.com", cc_emails=None, subject="", message=None,
+               attachment_path=None):
     smtp_server = "smtp.office365.com"
     smtp_port = 587
 
@@ -15,8 +17,8 @@ def send_email(sender_email = "alinmagdad@outlook.com", sender_password = "yogev
     email = MIMEMultipart()
     email["From"] = sender_email
     email["To"] = recipient_email
-    #if cc_emails:
-     #   email["Cc"] = ", ".join(cc_emails)  # Join CC emails with comma separator
+    # if cc_emails:
+    #   email["Cc"] = ", ".join(cc_emails)  # Join CC emails with comma separator
 
     email["Subject"] = subject
 
@@ -51,6 +53,7 @@ def send_email(sender_email = "alinmagdad@outlook.com", sender_password = "yogev
         # Close the connection
         server.quit()
 
+
 def sender():
     # Provide your email credentials and other details
     sender_email = "alinmagdad@outlook.com"
@@ -61,11 +64,13 @@ def sender():
     attachment_path = "/Users/yogev/Library/CloudStorage/OneDrive-Personal/talp_files/yr 2/sem d/logic 2/sol8.pdf"
 
     # Send the email
-    send_email(sender_email= sender_email,  sender_password= sender_password,recipient_email=  recipient_email,
-               subject= subject, message=message, attachment_path= attachment_path)
+    send_email(sender_email=sender_email, sender_password=sender_password, recipient_email=recipient_email,
+               subject=subject, message=message, attachment_path=attachment_path)
+
 
 # recieve data file via mail
-def download_attachment_with_subject(username = "alinmagdad@outlook.com" , password = "yogev&0mri", subject = None, save_folder = "PI/Media"):
+def download_attachment_with_subject(username="alinmagdad@outlook.com", password="yogev&0mri", subject=None,
+                                     save_folder="PI/Media"):
     """
 
     :param username:
@@ -117,6 +122,7 @@ def download_attachment_with_subject(username = "alinmagdad@outlook.com" , passw
     # Logout and close the connection
     connection.logout()
 
+
 def receive_data():
     """
 
@@ -126,12 +132,12 @@ def receive_data():
     username = "alinmagdad@outlook.com"
     password = "yogev&0mri"
     subject = "testsubj"
-    save_folder = "/Users/yogev/Desktop" #todo  change this
+    save_folder = "/Users/yogev/Desktop"  # todo  change this
     # Download the attachment from the most recent email with the specified subject
     download_attachment_with_subject(username, password, subject, save_folder)
 
 
-#todo write a file into diskonkey
+# todo write a file into diskonkey
 
 def check_and_copy_file(file_path, destination_folder):
     """
@@ -154,6 +160,8 @@ def check_and_copy_file(file_path, destination_folder):
             return
 
     print("No flash drive found.")
+
+
 def copy_file():
     # Specify the source file and destination folder
     source_file = "/path/to/source/file.txt"
@@ -162,11 +170,12 @@ def copy_file():
     # Check and copy the file to the flash drive
     check_and_copy_file(source_file, destination_folder)
 
-#todo recieve input from keyboard
+
+# todo recieve input from keyboard
 """
 maybe if keyboard conected then it can turn on wifi
 send mail
 recieve mail
 """
 
-#todo recieve input from mouse and control with it
+# todo recieve input from mouse and control with it

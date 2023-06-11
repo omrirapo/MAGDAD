@@ -4,7 +4,7 @@ from time import sleep
 import stepper_motor
 from Motor import Motor
 import RPi.GPIO as GPIO
-from Arm import Arm
+from Arm_movement_module.Arm import Arm
 
 
 class Plates:
@@ -13,13 +13,8 @@ class Plates:
                  turn_mot: stepper_motor):
         """
 
-        :param lower_height:
-        :param dx:
-        :param upper_height:
-        :param iner_radi: inner radius of bowl
-        :param outer_radi: outer radius of bowl
-        :param platter_mot: platter stepper motor obj
-        :param turn_mot: turning bowls stepper motor obj
+        :param platter_mot: servo motor to switch plates
+        :param turn_mot: stepper motor to tuen plates
         """
 
         self.diag = 0
@@ -29,34 +24,22 @@ class Plates:
         self.turn_motor = turn_mot
     def change_plate(self):
         """
-        change the plate that is eaten from need to change implemntation to use microswitches
+        change the plate that is eaten from
+        bowls 0 -120, 1 - 0, 2 - 120 -> ang = (curbowl-1)*120-
         :return:
         """
         self.cur_plate = (self.cur_plate + 1) % 3
-        angle_to_move = 120
-        if self.cur_plate == 0:
-            angle_to_move = -240
-        my_array = self.angle_fed[self.cur_plate]
-        min_index = my_array.index(min(my_array))
+        angle_to_move = (self.cur_plate-1)*120
+        # find angle of bowl
+        eaten = self.angle_fed[self.cur_plate]
+        min_index = eaten.index(min(eaten))
 
-        self.platter_motor.move_to_angle(angle_to_move)  # todo define the direction of the turn
+        time = 5
+        stps = 1e4
+        self.platter_motor.move_to_angle(angle_to_move, time, stps)
         self.turn_motor.move_to_angle(15 * (min_index - self.diag))
         self.diag = min_index
 
-    def move_changing_servo_to_angle(self, angle):
-        """
-        move the servo to the angle
-        :param angle:
-        :return:
-        """
-        total_time = 5
-        #counter = time.pf_counter()
-        num_of_steps = int(total_time / 0.02)
-        distance_per_step = angle / num_of_steps
-        plm = self.platter_motor
-        while plm.currAngle != angle:
-            plm.move_to_angle(plm.currAngle + distance_per_step)
-            sleep(0.02)
     def turn_bowl(self):
         """
         turn bowl to the minimum

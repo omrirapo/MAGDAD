@@ -1,12 +1,13 @@
-from Arm import Arm
+from Arm_movement_module.Arm import Arm
 from Motor import Motor
-from stepper_motor import StepperMotor
+from Arm_movement_module.stepper_motor import StepperMotor
 from only_mouth import mouthing
 from time import sleep
-from Plate import Plates
+from Arm_movement_module.Plate import Plates
 import pickle
 import RPi.GPIO as GPIO
-from consts import *
+from Control.consts import *
+from gatherFood import gather_food
 
 
 pin_mangement = {
@@ -78,19 +79,6 @@ def orient(arm: Arm, user_height=0, cam_height=0):
 
     print("started orient")
 
-    # arm_motor = Motor(SERVO_ARM, lambda alpha: alpha / 90)
-    # wrist_motor = Motor(SERVO_WRIST, lambda alpha: alpha / 90)
-    # shoulder_motor = StepperMotor(20, 21, 200, 131.34)
-    # arm = Arm(arm_motor, wrist_motor, shoulder_motor, 89.142, 129.5)
-    # arm.move_hand_by_motors_input(0, -90, -90)
-
-    # with open('DB', 'rb') as dbfile:
-    #   try:
-    # db = pickle.load(dbfile)
-    # #   except EOFError:
-    # db = {}
-    # if name in db:
-    #     arm.move_hand_by_motors_input(0, arm.get_alpha1(), arm.get_alpha1())
 
     t = 0
     mouther = mouthing()
@@ -155,11 +143,25 @@ def init_platter():
 
     :return:
     """
-
-    plat_mot = StepperMotor(27, 18, 200)  # todo fill in the constants for the motors
-    turn_mot = StepperMotor(23, 22, 200)  # todo fill in the constants for the motors
+    plate_servos = lambda alpha: alpha / (plate_servo_ang / 2)
+    plat_mot = Motor(SERVO_PLATTER, plate_servos)
+    turn_mot = StepperMotor(23, 22, 200)
     return Plates(plat_mot, turn_mot)
 
+def init_arm():
+    """
+
+    :return:
+    """
+
+    wrist_lambda = lambda alpha: alpha * wrist_ratio / (wrist_servo_ang / 2)
+    arm_lambda = lambda alpha: alpha * arm_ratio / (arm_servo_ang / 2)
+    arm_motor = Motor(SERVO_ARM, arm_lambda)
+    wrist_motor = Motor(SERVO_WRIST, wrist_lambda)
+    shoulder_motor = StepperMotor(SHOULDER_DIR, SHOULDER_STP, SHOULDER_NUM,
+                                  MM_PER_ANGLE)
+    #todo move the hand here to 000 and initialize the values
+    return Arm(arm_motor, wrist_motor, shoulder_motor, FOREARM, BICEP)
 
 def flow():
     """
@@ -168,55 +170,32 @@ def flow():
     """
     # define buttons
 
-    # todo initialise user preferances
     # initialise plate:
-
-    # initialise arm
-    arm_motor = Motor(SERVO_ARM, lambda alpha: alpha / 45)
-    wrist_motor = Motor(SERVO_WRIST, lambda alpha: alpha / 45)
-    shoulder_motor = StepperMotor(3, 2, 200,
-                                  0.367)  # todo change the constants, and move them into variables with names
-    arm = Arm(arm_motor, wrist_motor, shoulder_motor, d, r)
     platter = init_platter()
-    platter.gather_food(arm)
-    orient(arm, 0, CAM_HEIGHT)
-
-    mouth_height.append(orient(arm, 0, CAM_HEIGHT))
-
-    move_till_touch(arm, 10, 0.5)
-    arm.move_hand(0, 0, 0)
-    # go back
+    # initialise arm
+    arm = init_arm()
+    cmd = get_command()
 
     # call turn bowls a bit
+    platter.turn_bowl()
 
-
+#todo finish get command generic so works also with keyboard.
+def get_command():
+    pass
+    #while True:
+    #    if button_pins['']
 def alpha_feeding(arm):
     """
-    lifts food, and feeds the user, this the first method we use and  hence the alpha version of feeding
+    lifts food, and feeds the user, this the heart
     """
-    arm.move_hand(-40, -120, -45)
-    sleep(2)
-    arm.move_hand(-40, -140, -50)
-    sleep(2)
-    arm.move_hand(-55, -160, -60)
-    sleep(2)
-    arm.move_hand(-70, -160, -60)
-    sleep(2)
-    arm.move_hand(-50, -180, -60)
-    sleep(2)
-    arm.move_hand(-30, -180, -60)
-    sleep(2)
-    arm.move_hand(0, -160, -40)
-    sleep(2)
-    arm.move_hand(0, -60, 0)
-    sleep(2)
+    gather_food(arm)
+    # find mouth height
+    orient(arm, mouth_height[-1], CAM_HEIGHT)
+    mouth_height.append(orient(arm, 0, CAM_HEIGHT))
+    move_till_touch(arm, 10, 0.5)
+    sleep(EATING_TIME)
     arm.move_hand(0, 0, 0)
-    sleep(2)
-    arm.move_hand(450, 0, 0)
-    sleep(2)
-
-
-def beta_feeding(arm): pass
+    #todo add a timeout till receive input from microswitch that the arm is back in place before start next round
 
 
 if __name__ == '__main__':

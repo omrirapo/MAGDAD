@@ -53,13 +53,23 @@ class Motor:
         """
         self._servo = value
 
-    def move_to_angle(self, new_angle):
+    def move_to_angle(self, new_angle,time = None, stps = 1000):
         """
         move the servo to a new angle
         :param new_angle: the new angle to move to in degrees
+        :param time : time to turn
+        :param stps: stps to turn with
         :return: if the angle is possible to move to
         """
-        if -1 <= self._Anlge2ValConverter(new_angle) <= 1:
+        if time:
+            dest = self._Anlge2ValConverter(new_angle)
+            diff = (dest-self.currAngle)/stps
+            angles = [self.currAngle + i*diff for i in range(stps+1)]
+            for ang in angles:
+                self._servo.value = ang
+                sleep(time/stps)
+            return True
+        elif -1 <= self._Anlge2ValConverter(new_angle) <= 1:
             self._servo.value = self._Anlge2ValConverter(new_angle)
             self.currAngle = new_angle
             # print(f"curr angle = {new_angle}, value = {self._servo.value}")
