@@ -1,4 +1,4 @@
-import                                                                                                                                                                                                                                                      cv2
+import cv2
 
 DELTA = 0.1
 
@@ -99,8 +99,3 @@ def mouthing():
 
     return get_pos
 
-
-if __name__ == '__main__':
-    mouther = mouthing()
-    while True:
-        print(mouther())

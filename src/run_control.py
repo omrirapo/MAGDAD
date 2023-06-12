@@ -1,14 +1,12 @@
-from Arm_movement_module.Arm import Arm
+from Arm import Arm
 from Motor import Motor
-from Arm_movement_module.stepper_motor import StepperMotor
+from stepper_motor import StepperMotor
 from only_mouth import mouthing
 from time import sleep
-from Arm_movement_module.Plate import Plates
-import pickle
+from Plate import Plates
 import RPi.GPIO as GPIO
-from Control.consts import *
+from consts import *
 from gatherFood import gather_food
-
 
 pin_mangement = {
     SHOULDER_STP: "stpshoulder",
@@ -18,10 +16,8 @@ pin_mangement = {
     TOUCH: "touch",
     BOWL_STP: "stpbowl",
     MICRO_BACK: "micro_back",
-    PLATTER_STP: "stpplatter",
-    PLATTER_DIR: "dirplatter",
     SERVO_WRIST: "servo_wrist",
-    BOWL_DIR: "dirbowl",
+    BOWL_DIR: "dirbowl"
 
     # 24: "changefood",
     # 25: "emergency",
@@ -79,7 +75,6 @@ def orient(arm: Arm, user_height=0, cam_height=0):
 
     print("started orient")
 
-
     t = 0
     mouther = mouthing()
     val = mouther()  # todo add an explaination
@@ -88,7 +83,6 @@ def orient(arm: Arm, user_height=0, cam_height=0):
             arm.move_up_deg(val * MOUTH_IN_DEGREES)
         except Exception as e:
             print(e)
-
 
         # arm.move_hand_by_motors_input(0, arm.get_alpha1() + val * 10, arm.get_alpha1() + val * 10) # todo what is 10
         t += 1
@@ -119,7 +113,7 @@ def move_till_touch(arm: Arm, dist, time):
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(TOUCH, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-    while not GPIO.input(TOUCH):
+    while not (GPIO.input(TOUCH),):
         arm.move_forward(dist)
     mouth_dist.append(arm.get_x())
 
@@ -145,8 +139,9 @@ def init_platter():
     """
     plate_servos = lambda alpha: alpha / (plate_servo_ang / 2)
     plat_mot = Motor(SERVO_PLATTER, plate_servos)
-    turn_mot = StepperMotor(23, 22, 200)
+    turn_mot = StepperMotor(BOWL_DIR, BOWL_STP, BOWL_ENABLE, BOWL_NUM)
     return Plates(plat_mot, turn_mot)
+
 
 def init_arm():
     """
@@ -158,10 +153,11 @@ def init_arm():
     arm_lambda = lambda alpha: alpha * arm_ratio / (arm_servo_ang / 2)
     arm_motor = Motor(SERVO_ARM, arm_lambda)
     wrist_motor = Motor(SERVO_WRIST, wrist_lambda)
-    shoulder_motor = StepperMotor(SHOULDER_DIR, SHOULDER_STP, SHOULDER_NUM,
+    shoulder_motor = StepperMotor(SHOULDER_DIR, SHOULDER_STP, SHOULDER_ENABLE, SHOULDER_NUM,
                                   MM_PER_ANGLE)
-    #todo move the hand here to 000 and initialize the values
+    # todo move the hand here to 000 and initialize the values
     return Arm(arm_motor, wrist_motor, shoulder_motor, FOREARM, BICEP)
+
 
 def flow():
     """
@@ -177,25 +173,34 @@ def flow():
     cmd = get_command()
 
     # call turn bowls a bit
-    platter.turn_bowl()
+    feed(arm,platter) # todo remove after running feed throw listener
 
-#todo finish get command generic so works also with keyboard.
+
+# todo finish get command generic so works also with keyboard.
 def get_command():
     pass
-    #while True:
+    # while True:
     #    if button_pins['']
-def alpha_feeding(arm):
+
+
+def feed(arm, platter):
     """
     lifts food, and feeds the user, this the heart
     """
-    gather_food(arm)
+    arm.enable_shoulder()
+    gather_food(arm, platter)
     # find mouth height
     orient(arm, mouth_height[-1], CAM_HEIGHT)
     mouth_height.append(orient(arm, 0, CAM_HEIGHT))
     move_till_touch(arm, 10, 0.5)
+    arm.move_forward(MOUTH_DEPTH)
+    arm.disable_shoulder()
     sleep(EATING_TIME)
+    arm.enable_shoulder()
     arm.move_hand(0, 0, 0)
-    #todo add a timeout till receive input from microswitch that the arm is back in place before start next round
+    # todo add a timeout till receive input from microswitch that the arm is back in place before start next round
+
+    arm.disable_shoulder()
 
 
 if __name__ == '__main__':
