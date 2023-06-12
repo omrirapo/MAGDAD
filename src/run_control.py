@@ -91,7 +91,7 @@ def orient(arm: Arm, user_height=0, cam_height=0):
 
     sleep(0.5)
     cams = arm.get_y()
-    arm.move_hand(y = cams + CAM_HEIGHT, alpha =0)
+    arm.move_hand(y=cams + CAM_HEIGHT, alpha=0)
     sleep(0.5)
     print("finished orient")
     return cams
@@ -132,7 +132,7 @@ def start_all_buttons():
     initialize_buttons(button_pins["back"], GPIO.RISING)
 
 
-def init_platter():
+def init_platter(arm):
     """
 
     :return:
@@ -140,7 +140,7 @@ def init_platter():
     plate_servos = lambda alpha: alpha / (plate_servo_ang / 2)
     plat_mot = Motor(SERVO_PLATTER, plate_servos)
     turn_mot = StepperMotor(BOWL_DIR, BOWL_STP, BOWL_ENABLE, BOWL_NUM)
-    return Plates(plat_mot, turn_mot)
+    return Plates(plat_mot, turn_mot, arm)
 
 
 def init_arm():
@@ -168,29 +168,27 @@ def flow():
 
     # initialise plate:
     arm = init_arm()
-    
-    platter = init_platter()
+
+    platter = init_platter(arm)
     # initialise arm
-    cmd = get_command()
     while True:
-        
-        platter.change_plate()
-    
-
-
-        sleep(5)
-
-
-    # call turn bowls a bit
-        #feed(arm,platter) # todo remove after running feed throw listener
+        cmd = get_command(arm, platter)
+        if cmd == "exit":
+            arm.disable_shoulder()
+            platter.disable_bowl_motor()
+            platter.go_to_start()
+            return
         sleep(0.5)
 
 
-# todo finish get command generic so works also with keyboard.
-def get_command():
-    pass
-    # while True:
-    #    if button_pins['']
+def get_command(arm, platter):
+    inp = input("E - Eat. C - change, Q - quit")
+    if inp == "E":
+        return feed(arm, platter)
+    elif inp == "C":
+        return platter.change_plate()
+    elif inp == "Q":
+        return "exit"
 
 
 def feed(arm, platter):
@@ -200,12 +198,12 @@ def feed(arm, platter):
     arm.enable_shoulder()
     gather_food(arm, platter)
     # find mouth height
-    #orient(arm, mouth_height[-1], CAM_HEIGHT)
-    
+    # orient(arm, mouth_height[-1], CAM_HEIGHT)
+
     mouth_height.append(orient(arm, 0))
     move_till_touch(arm, 10, 0.5)
     sleep(0.2)
-    arm.move_hand(x=arm.get_x()+MOUTH_DEPTH,alpha=MOUTH_ANGLE,wait_between_steps=0.01)
+    arm.move_hand(x=arm.get_x() + MOUTH_DEPTH, alpha=MOUTH_ANGLE, wait_between_steps=0.01)
     sleep(0.2)
     arm.disable_shoulder()
     sleep(EATING_TIME)
@@ -219,4 +217,3 @@ def feed(arm, platter):
 
 if __name__ == '__main__':
     flow()
-

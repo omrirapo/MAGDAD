@@ -65,11 +65,11 @@ class Motor:
         if time:
             dest = self._Anlge2ValConverter(new_angle)
             diff = (dest - self._Anlge2ValConverter(self.currAngle)) / stps
-            angles = [self._Anlge2ValConverter(self.currAngle) + i * diff for i in range(stps + 1)]
-            for ang in angles:
-                self._servo.value = ang
+            values = [self._Anlge2ValConverter(self.currAngle) + i * diff for i in range(stps + 1)]
+            for val in values:
+                self._servo.value = val
                 sleep(time / stps)
-                self.currAngle = ang
+            self.currAngle = new_angle
             
             return True
         elif -1 <= self._Anlge2ValConverter(new_angle) <= 1:
