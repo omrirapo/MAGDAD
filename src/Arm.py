@@ -3,9 +3,7 @@ import math
 from Motor import Motor
 from stepper_motor import StepperMotor
 from time import sleep
-import time
-from math import cos, sin
-from Control.consts import MAX_X
+from consts import MAX_X
 
 
 def _angle_to_radians(*angles):
@@ -32,7 +30,8 @@ def _radians_to_angle(*radians):
 
 class Arm:
 
-    def __init__(self, wrist_motor: Motor, arm_motor: Motor, shoulder_motor: StepperMotor, forearm: float, bicep: float):
+    def __init__(self, wrist_motor: Motor, arm_motor: Motor, shoulder_motor: StepperMotor, forearm: float,
+                 bicep: float):
         """
 
         :param wrist_motor: the motor that moves the wrist as a Motor object
@@ -46,6 +45,7 @@ class Arm:
         self._ShoulderMotor = shoulder_motor
         self.forearm = forearm
         self.bicep = bicep
+        self.disable_shoulder()
 
     def _coordinates_to_motor_input(self, x: float, y: float, alpha: float):
         """
@@ -91,7 +91,7 @@ class Arm:
         :param wait_between_steps: the time to wait between each step in seconds
         :return: current coordinates after move
         """
-        l = max(min(MAX_X,l),0) # make sure l is between 0 and MAX_X
+        l = max(min(MAX_X, l), 0)  # make sure l is between 0 and MAX_X
 
         curr_arm_angle = self._ArmMotor.currAngle
         curr_wrist_angle = self._WristMotor.currAngle
@@ -114,7 +114,7 @@ class Arm:
             return False
         if not self._WristMotor.move_to_angle(alpha2):
             return False
-        if l < 0: # not relevant.
+        if l < 0:  # not relevant.
             return False
         self._ShoulderMotor.move_to_x(l)
         return self.get_coordinates()
@@ -160,6 +160,7 @@ class Arm:
         # print(
         #     f"l = {self._coordinates_to_motor_input(x, y, alpha)[0]}, alpha1 = {self._coordinates_to_motor_input(x, y, alpha)[1]}, alpha2 = {self._coordinates_to_motor_input(x, y, alpha)[2]}")
         if not self.move_hand_by_motors_input(*self._coordinates_to_motor_input(x, y, alpha), wait_between_steps):
+            print(f"failed to move hand while trying to move to coordinates {x,y,alpha}, instead moved to {self.get_coordinates()}")
             return False
         return self.get_coordinates()
 
@@ -206,8 +207,7 @@ class Arm:
         :return: a tuple of (x,y, alpha) when x is the x coordinate, y is the y coordinate and alpha is the angle,
         all of the spoon relative to starting pos.
         """
-        return self._motor_input_to_coordinates(self._ArmMotor.currAngle, self._WristMotor.currAngle,
-                                                self._ShoulderMotor.get_x())
+        return self._motor_input_to_coordinates(self._ShoulderMotor.get_x(),self._ArmMotor.currAngle, self._WristMotor.currAngle)
 
     def get_x(self):
         """
@@ -257,7 +257,7 @@ class Arm:
         :param dist: distance to travel
         :param time: time to travel it
         """
-        self._ShoulderMotor.move_to_x(dist+self._ShoulderMotor.get_x())
+        self._ShoulderMotor.move_to_x(dist + self._ShoulderMotor.get_x())
 
     def move_backward(self, dist):
         """
@@ -300,15 +300,16 @@ class Arm:
         """
         self.move_hand(self.get_x(), self.get_y(), angle)
 
+    def disable_shoulder(self):
+        """
+        disables the shoulder motor uses stepper_motor.disable
+        :return:
+        """
+        self._ShoulderMotor.disable()
 
-if __name__ == '__main__':
-    d = 89.142  # from the wrist to the end of the spoon
-    r = 129.5  # the length from the elbow to the wrist
-    arm_motor = Motor(9, lambda alpha: alpha / 90)
-    wrist_motor = Motor(25, lambda alpha: alpha / 90)
-    shoulder_motor = StepperMotor(3, 2, 200, 131.34)
-    arm = Arm(wrist_motor, arm_motor, shoulder_motor, d, r)
-    shoulder_motor.move_to_angle(90)
-
-    # sleep(2)
-    # print(arm.move_hand(10, 90, 90))
+    def enable_shoulder(self):
+        """
+        enables the shoulder motor uses stepper_motor.enable
+        :return:
+        """
+        self._ShoulderMotor.enable()

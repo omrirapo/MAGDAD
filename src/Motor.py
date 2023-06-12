@@ -1,4 +1,4 @@
-import typing
+from time import sleep
 from typing import Callable
 
 from gpiozero import Servo
@@ -19,7 +19,7 @@ class Motor:
         self._servo = Servo(GPIO, min_pulse_width=MinSignal, max_pulse_width=MaxSignal, pin_factory=factory)
         self._Anlge2ValConverter = Anlge2ValConverter
         self.currAngle = 0
-        self.move_to_angle(self.currAngle)
+        self.move_to_angle(0)
 
     @property
     def Anlge2ValConverter(self):
@@ -53,21 +53,24 @@ class Motor:
         """
         self._servo = value
 
-    def move_to_angle(self, new_angle,time = None, stps = 1000):
+    def move_to_angle(self, new_angle, time=None, stps=1000):
         """
-        move the servo to a new angle
+        move the servo to a new angle, updates curr_angle
         :param new_angle: the new angle to move to in degrees
         :param time : time to turn
         :param stps: stps to turn with
         :return: if the angle is possible to move to
         """
+        stps = int(stps)
         if time:
             dest = self._Anlge2ValConverter(new_angle)
-            diff = (dest-self.currAngle)/stps
-            angles = [self.currAngle + i*diff for i in range(stps+1)]
+            diff = (dest - self._Anlge2ValConverter(self.currAngle)) / stps
+            angles = [self._Anlge2ValConverter(self.currAngle) + i * diff for i in range(stps + 1)]
             for ang in angles:
                 self._servo.value = ang
-                sleep(time/stps)
+                sleep(time / stps)
+                self.currAngle = ang
+            
             return True
         elif -1 <= self._Anlge2ValConverter(new_angle) <= 1:
             self._servo.value = self._Anlge2ValConverter(new_angle)

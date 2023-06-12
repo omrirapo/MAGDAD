@@ -1,20 +1,16 @@
-import typing
-from typing import Callable
-
-from gpiozero import Servo
-from gpiozero.pins.pigpio import PiGPIOFactory
-from time import sleep
 import time
-import math
+from time import sleep
+
 import RPi.GPIO as GPIO
-from Control.consts import STEP_DELAY
+
+from consts import STEP_DELAY
 
 CW = 1
 CCW = 0
 
 
 class StepperMotor:
-    def __init__(self, DIR: int, STEP: int, steps_per_rotation: int, mm_per_angle: float = None):
+    def __init__(self, DIR: int, STEP: int, ENABLE, steps_per_rotation: int, mm_per_angle: float = None):
         """
 
         :param DIR: a gpio PIN that is connected to the DIR pin of the stepper motor, tells the motor to move CW or CCW
@@ -25,10 +21,12 @@ class StepperMotor:
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(DIR, GPIO.OUT)
         GPIO.setup(STEP, GPIO.OUT)
+        GPIO.setup(ENABLE, GPIO.OUT)
         GPIO.output(DIR, CCW)
 
         self._DIR = DIR
         self._STEP = STEP
+        self._ENABLE = ENABLE
         self._steps_per_rotation = steps_per_rotation
         self._millis_per_angle = mm_per_angle
         self.angle = 0
@@ -46,15 +44,29 @@ class StepperMotor:
         GPIO.output(self._STEP, GPIO.LOW)
         sleep(STEP_DELAY)
 
+    def enable(self):
+        """
+        lets the motor be controlled by the step function
+        :return:
+        """
+        GPIO.output(self._ENABLE, GPIO.LOW)
+
+    def disable(self):
+        """
+        makes the motor unable to be controlled by the step function, if the motor is disabled it can be moved freely as if it was not connected to the pi
+        :return:
+        """
+        GPIO.output(self._ENABLE, GPIO.HIGH)
+
     def move_to_angle(self, new_angle):
         """
         moves the motor to a new angle
         :param new_angle: the new angle to move to in degrees
         """
         rotations = (new_angle - self.angle) / 360
-        #print(f"rotations: {rotations}, angle: {self.angle}, new_angle: {new_angle}")
+        # print(f"rotations: {rotations}, angle: {self.angle}, new_angle: {new_angle}")
         steps = round(self._steps_per_rotation * rotations)
-        self.angle += (steps/self._steps_per_rotation)*360
+        self.angle += (steps / self._steps_per_rotation) * 360
         if rotations > 0:
             GPIO.output(self._DIR, CW)
 
@@ -63,8 +75,6 @@ class StepperMotor:
             steps *= -1
         for i in range(steps):
             self.step()
-
-
 
     def get_angle(self):
         """
