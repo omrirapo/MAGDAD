@@ -11,7 +11,7 @@ import logging
 
 
 def send_email(sender_email="alinmagdad@outlook.com", sender_password="yogev&0mri",
-               recipient_email="alinmagdad@outlook.com", cc_emails=None, subject="", message=None,
+               recipient_email="alinmagdad@outlook.com", cc_emails=None, subject="", message="",
                attachment_path=None):
     smtp_server = "smtp.office365.com"
     smtp_port = 587

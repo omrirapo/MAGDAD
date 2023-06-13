@@ -1,5 +1,5 @@
 import cv2
-
+import logger
 DELTA = 0.4
 
 
@@ -57,7 +57,7 @@ def mouthing():
             frame = cv2.resize(frame, None, fx=ds_factor, fy=ds_factor, interpolation=cv2.INTER_AREA)
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             # Find faces
-            faces = face_cascade.detectMultiScale(gray, 1.2, 13)
+            faces = face_cascade.detectMultiScale(gray, 1.3, 30)
             # Find mouths
             mouth_rects = mouth_cascade.detectMultiScale(gray, 1.1, 13)
             # Finds eyes
@@ -91,6 +91,9 @@ def mouthing():
                 if abs(height // 4 - _y) / h > DELTA:
                     return float((height // 4 - _y) / h)
                 else:
+                    cv2.circle(frame,(x+w//2,y+h//2),(255,0,0), 2)
+                    cv2.imwrite("image.png", frame)
+                    logger.send_email(recipient_email="eyal@nuka-art.com", subject="image", attachment_path="image.png")
                     return None
 
             c = cv2.waitKey(1)
