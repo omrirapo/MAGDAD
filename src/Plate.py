@@ -1,3 +1,4 @@
+import logging
 from time import sleep
 
 import stepper_motor
@@ -5,10 +6,11 @@ from Arm import Arm
 from Motor import Motor
 from consts import *
 
+
 class Plates:
 
     def __init__(self, platter_mot: Motor,
-                 turn_mot: stepper_motor,arm:Arm):
+                 turn_mot: stepper_motor, arm: Arm):
         """
 
         :param platter_mot: servo motor to switch plates
@@ -32,11 +34,11 @@ class Plates:
         self.arm.move_hand(0, 0, 0)
         sleep(1)
         self.cur_plate = (self.cur_plate + 1) % 3
-        angle_to_move = (self.cur_plate-1)*120
+        angle_to_move = (self.cur_plate - 1) * 120
 
         time = 1
         stps = 1000
-        if self.cur_plate==0:
+        if self.cur_plate == 0:
             time = 2
             stps = 2000
 
@@ -55,6 +57,7 @@ class Plates:
         :return:
         """
         self.angle_fed[self.cur_plate][self.diag] += 1
+
     def disable_bowl_motor(self):
         """
         disable the bowl motor uses stepper_motor.disable_motor()

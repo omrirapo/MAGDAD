@@ -10,7 +10,8 @@ CCW = 0
 
 
 class StepperMotor:
-    def __init__(self, DIR: int, STEP: int, ENABLE, steps_per_rotation: int, mm_per_angle: float = None):
+    def __init__(self, DIR: int, STEP: int, ENABLE, steps_per_rotation: int, mm_per_angle: float = None,
+                 ms_arr=tuple()):
         """
 
         :param DIR: a gpio PIN that is connected to the DIR pin of the stepper motor, tells the motor to move CW or CCW
@@ -32,7 +33,9 @@ class StepperMotor:
         self.angle = 0
         self._speed = 0
         self.wait_per_step = None
-        self._running_continues = False
+        self.micro_switches = ms_arr
+        for i, s in ms_arr:
+            GPIO.setup(i, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
     def step(self):
         """
@@ -67,14 +70,22 @@ class StepperMotor:
         # print(f"rotations: {rotations}, angle: {self.angle}, new_angle: {new_angle}")
         steps = round(self._steps_per_rotation * rotations)
         self.angle += (steps / self._steps_per_rotation) * 360
+        d = 1
         if rotations > 0:
             GPIO.output(self._DIR, CW)
 
         else:
             GPIO.output(self._DIR, CCW)
             steps *= -1
+            d = 0
+
         for i in range(steps):
+            for ms, direction in self.micro_switches:
+                if d != direction and GPIO.input(ms):
+                    return False
+
             self.step()
+        return True
 
     def get_angle(self):
         """
@@ -90,7 +101,7 @@ class StepperMotor:
         """
         if self._millis_per_angle is None:
             raise Exception("millis_per_angle is None")
-        self.move_to_angle((new_x / self._millis_per_angle))
+        return self.move_to_angle((new_x / self._millis_per_angle))
 
     def reset_location(self):
         """
@@ -100,7 +111,7 @@ class StepperMotor:
         """
         self._set_angle(0)
 
-    def _set_x(self, new_x):
+    def set_x(self, new_x):
         """
         sets the x of the motor without moving it
         :param new_x: the new x in millimeters
@@ -132,21 +143,3 @@ class StepperMotor:
         :return: the number of steps needed to move the distance
         """
         return round(dist * self._steps_per_rotation / (self._millis_per_angle * 360))
-
-    def move(self, dist, duration):
-        """
-        move dist in duration
-        :param dist: the distance in millis
-        :param duration: the time to move
-        """
-        if self._dist_to_steps(dist) == 0:
-            return
-        if duration == 0:
-            self.move_to_x(self.get_x() + dist)
-        num_of_steps = self._dist_to_steps(dist)
-        wait_time = duration / num_of_steps
-        for _ in range(num_of_steps):
-            cur_time = time.time()
-            self.step()
-            sleep(wait_time - (time.time() - cur_time))
-        self._set_x(self.get_x() + dist)

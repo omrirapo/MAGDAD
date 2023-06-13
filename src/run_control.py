@@ -1,3 +1,5 @@
+import os
+
 from Arm import Arm
 from Motor import Motor
 from stepper_motor import StepperMotor
@@ -7,6 +9,8 @@ from Plate import Plates
 import RPi.GPIO as GPIO
 from consts import *
 from gatherFood import gather_food
+import logging
+import logging.handlers
 
 pin_mangement = {
     SHOULDER_STP: "stpshoulder",
@@ -64,36 +68,35 @@ def clear_button(button):
     GPIO.remove_event_detect(pin_mangement[button])
 
 
-def orient(arm: Arm, user_height=0, cam_height=0):
+def orient(arm: Arm, user_height=0):
     """
 
     :param arm: arm Obj
     :param user_height: expected height
-    :param cam_height:
     :return: cam height that saw mouth
     """
 
-    print("started orient")
+    logging.info("started orient")
 
     t = 0
     mouther = mouthing()
     val = mouther()  # todo add an explaination
     while val is not None:
         try:
-            arm.move_up_deg(val * MOUTH_IN_DEGREES)
+            arm.move_up_deg(val * MOUTH_FINDER_SCALER)
         except Exception as e:
-            print(e)
+            logging.error(f"error in orient,can't move up, error: {e}")
 
         # arm.move_hand_by_motors_input(0, arm.get_alpha1() + val * 10, arm.get_alpha1() + val * 10) # todo what is 10
         t += 1
         val = mouther()
-        sleep(0.1)
+        sleep(0.04)
 
     sleep(0.5)
     cams = arm.get_y()
     arm.move_hand(y=cams + CAM_HEIGHT, alpha=0)
     sleep(0.5)
-    print("finished orient")
+    logging.info("finished orient")
     return cams
     # db[name] = arm.get_alpha1()
 
@@ -114,7 +117,8 @@ def move_till_touch(arm: Arm, dist, time):
     GPIO.setup(TOUCH, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     while not (GPIO.input(TOUCH)):
-        arm.move_forward(dist)
+        if not arm.move_forward(dist):
+            break
     mouth_dist.append(arm.get_x())
 
 
@@ -154,7 +158,7 @@ def init_arm():
     arm_motor = Motor(SERVO_ARM, arm_lambda)
     wrist_motor = Motor(SERVO_WRIST, wrist_lambda)
     shoulder_motor = StepperMotor(SHOULDER_DIR, SHOULDER_STP, SHOULDER_ENABLE, SHOULDER_NUM,
-                                  MM_PER_ANGLE)
+                                  MM_PER_ANGLE,[(4, 1), (17, 0)])
     # todo move the hand here to 000 and initialize the values
     return Arm(arm_motor, wrist_motor, shoulder_motor, FOREARM, BICEP)
 
@@ -196,11 +200,14 @@ def feed(arm, platter):
     lifts food, and feeds the user, this the heart
     """
     arm.enable_shoulder()
+    arm.move_to_minimal_x()
     gather_food(arm, platter)
     # find mouth height
     # orient(arm, mouth_height[-1], CAM_HEIGHT)
-
+    arm.disable_shoulder()
     mouth_height.append(orient(arm, 0))
+    arm.enable_shoulder()
+    arm.move_to_minimal_x()
     move_till_touch(arm, 10, 0.5)
     sleep(0.2)
     arm.move_hand(x=arm.get_x() + MOUTH_DEPTH, alpha=MOUTH_ANGLE, wait_between_steps=0.01)
@@ -209,6 +216,7 @@ def feed(arm, platter):
     sleep(EATING_TIME)
     arm.enable_shoulder()
     arm.move_hand(0, 0, 0)
+    arm.move_to_minimal_x()
     sleep(0.5)
     # todo add a timeout till receive input from microswitch that the arm is back in place before start next round
 
@@ -216,4 +224,16 @@ def feed(arm, platter):
 
 
 if __name__ == '__main__':
+    logs = open("logs.log", 'w')
+    if not logs:
+        print("can't open log file")
+        exit(1)
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+
+    handler = logging.StreamHandler(logs)
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    root.addHandler(handler)
     flow()

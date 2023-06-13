@@ -4,6 +4,7 @@ from Motor import Motor
 from stepper_motor import StepperMotor
 from time import sleep
 from consts import MAX_X
+import logging
 
 
 def _angle_to_radians(*angles):
@@ -79,8 +80,12 @@ class Arm:
         return x, y, alpha
 
     def move_to_minimal_x(self):
-        # todo change this so it moves back till it touches the microswitch and then resets the 0. and add a timeout.
-        self._ShoulderMotor.move_to_x(0)
+        """
+        moves the arm backwards until it reaches the minimal x coordinate
+        :return:
+        """
+        self._ShoulderMotor.move_to_x(-MAX_X)
+        self._ShoulderMotor.reset_location()
 
     def move_hand_by_motors_input(self, l: float, alpha1: float, alpha2: float, wait_between_steps=0.001):
         """
@@ -91,8 +96,9 @@ class Arm:
         :param wait_between_steps: the time to wait between each step in seconds
         :return: current coordinates after move
         """
-        l = max(min(MAX_X, l), 0)  # make sure l is between 0 and MAX_X
 
+        l = max(min(MAX_X, l), 0)  # make sure l is between 0 and MAX_X
+        is_shoulder_in_max = False
         curr_arm_angle = self._ArmMotor.currAngle
         curr_wrist_angle = self._WristMotor.currAngle
         curr_shoulder_position = self._ShoulderMotor.get_x()
@@ -108,15 +114,20 @@ class Arm:
                 return False
             if new_shoulder_position < 0:
                 return False
-            self._ShoulderMotor.move_to_x(new_shoulder_position)
+            if not is_shoulder_in_max:
+                if not self._ShoulderMotor.move_to_x(new_shoulder_position):
+                    is_shoulder_in_max = True
             sleep(wait_between_steps)
         if not self._ArmMotor.move_to_angle(alpha1):
             return False
         if not self._WristMotor.move_to_angle(alpha2):
             return False
-        if l < 0:  # not relevant.
+        if l < 0:
             return False
-        self._ShoulderMotor.move_to_x(l)
+        if not is_shoulder_in_max:
+            self._ShoulderMotor.move_to_x(l)
+        else:
+            return False
         return self.get_coordinates()
 
     def move_hand_by_angles(self, alpha1: float, alpha2: float, wait_between_steps=0.001):
@@ -151,18 +162,25 @@ class Arm:
         :param wait_between_steps: the time to wait between each step in seconds
         :return: True if moved successfully, false otherwise
         """
-        if x is None:
-            x = self.get_x()
-        if y is None:
-            y = self.get_y()
-        if alpha is None:
-            alpha = self.get_alpha()
-        # print(
-        #     f"l = {self._coordinates_to_motor_input(x, y, alpha)[0]}, alpha1 = {self._coordinates_to_motor_input(x, y, alpha)[1]}, alpha2 = {self._coordinates_to_motor_input(x, y, alpha)[2]}")
-        if not self.move_hand_by_motors_input(*self._coordinates_to_motor_input(x, y, alpha), wait_between_steps):
-            print(f"failed to move hand while trying to move to coordinates {x,y,alpha}, instead moved to {self.get_coordinates()}")
+        try:
+            if x is None:
+                x = self.get_x()
+            if y is None:
+                y = self.get_y()
+            if alpha is None:
+                alpha = self.get_alpha()
+            if not self.move_hand_by_motors_input(*self._coordinates_to_motor_input(x, y, alpha), wait_between_steps):
+                logging.warning(
+                    f"failed to move hand while trying to move to coordinates {x, y, alpha}, instead moved to {self.get_coordinates()}")
+
+                return False
+            return self.get_coordinates()
+        except Exception as e:
+            logging.error(
+                f"failed to move hand while trying to move to coordinates {x, y, alpha},"
+                f" location requested is not possible, staying in place")
+            logging.error(e)
             return False
-        return self.get_coordinates()
 
     def is_coordinates_possible(self, x: float, y: float, alpha: float):
         """
@@ -207,7 +225,8 @@ class Arm:
         :return: a tuple of (x,y, alpha) when x is the x coordinate, y is the y coordinate and alpha is the angle,
         all of the spoon relative to starting pos.
         """
-        return self._motor_input_to_coordinates(self._ShoulderMotor.get_x(),self._ArmMotor.currAngle, self._WristMotor.currAngle)
+        return self._motor_input_to_coordinates(self._ShoulderMotor.get_x(), self._ArmMotor.currAngle,
+                                                self._WristMotor.currAngle)
 
     def get_x(self):
         """
@@ -257,7 +276,7 @@ class Arm:
         :param dist: distance to travel
         :param time: time to travel it
         """
-        self._ShoulderMotor.move_to_x(dist + self._ShoulderMotor.get_x())
+        return self._ShoulderMotor.move_to_x(dist + self._ShoulderMotor.get_x())
 
     def move_backward(self, dist):
         """
@@ -281,9 +300,7 @@ class Arm:
         :param dist: distance to travel
         :param time: time to travel it
         """
-        x, y, alpha = self.get_coordinates()
-        _, alpha1, alpha2 = self._coordinates_to_motor_input(x, y + dist, alpha)
-        self.move_hand_by_motors_input(self._ShoulderMotor.get_x(), alpha1, alpha2)
+        self.move_hand(self.get_x(), self.get_y() + dist, self.get_alpha())
 
     def move_down(self, dist):
         """

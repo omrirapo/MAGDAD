@@ -1,6 +1,6 @@
 import cv2
 
-DELTA = 0.1
+DELTA = 0.4
 
 
 def restrict_to_target(target, obj_arr):
@@ -57,7 +57,7 @@ def mouthing():
             frame = cv2.resize(frame, None, fx=ds_factor, fy=ds_factor, interpolation=cv2.INTER_AREA)
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             # Find faces
-            faces = face_cascade.detectMultiScale(gray, 1.3, 30)
+            faces = face_cascade.detectMultiScale(gray, 1.2, 13)
             # Find mouths
             mouth_rects = mouth_cascade.detectMultiScale(gray, 1.1, 13)
             # Finds eyes

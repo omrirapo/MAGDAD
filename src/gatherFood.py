@@ -11,6 +11,7 @@ def gather_food(arm: Arm,platter:Plates):
     :param arm:
     :return:
     """
+    arm.enable_shoulder()
     platter.enable_bowl_motor()
     platter.turn_bowl()
     arm.move_hand(0, 0, 0)
@@ -32,3 +33,4 @@ def gather_food(arm: Arm,platter:Plates):
     sleep(0.2)
     arm.move_hand(0, 0, 0)
     platter.disable_bowl_motor()
+    arm.disable_shoulder()

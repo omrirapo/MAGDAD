@@ -75,7 +75,6 @@ class Motor:
         elif -1 <= self._Anlge2ValConverter(new_angle) <= 1:
             self._servo.value = self._Anlge2ValConverter(new_angle)
             self.currAngle = new_angle
-            # print(f"curr angle = {new_angle}, value = {self._servo.value}")
             return True
         else:
             return False

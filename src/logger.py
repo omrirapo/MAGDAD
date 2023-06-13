@@ -7,6 +7,7 @@ from email import encoders
 import email
 import os
 import shutil
+import logging
 
 
 def send_email(sender_email="alinmagdad@outlook.com", sender_password="yogev&0mri",
@@ -48,9 +49,9 @@ def send_email(sender_email="alinmagdad@outlook.com", sender_password="yogev&0mr
 
         # Send the email
         server.sendmail(sender_email, recipient_email, email.as_string())
-        print("Email sent successfully.")
+        logging.info("Email sent successfully.")
     except Exception as e:
-        print("Failed to send email:", str(e))
+        logging.error("Failed to send email. "+str(e))
     finally:
         # Close the connection
         server.quit()
@@ -118,7 +119,7 @@ def download_attachment_with_subject(username="alinmagdad@outlook.com", password
                 save_path = os.path.join(save_folder, filename)
                 with open(save_path, "wb") as f:
                     f.write(part.get_payload(decode=True))
-                print("Attachment downloaded:", save_path)
+                    logging.info("Attachment downloaded: "+save_path)
                 break
 
     # Logout and close the connection
@@ -158,10 +159,9 @@ def check_and_copy_file(file_path, destination_folder):
             # Flash drive found, copy the file to the destination folder
             destination_path = os.path.join(device_path, destination_folder)
             shutil.copy2(file_path, destination_path)
-            print("File copied successfully.")
+            logging.info("File copied successfully.")
             return
-
-    print("No flash drive found.")
+    logging.warning("No flash drive found.")
 
 
 def copy_file():

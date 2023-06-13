@@ -1,4 +1,4 @@
-MOUTH_IN_DEGREES = 5
+MOUTH_FINDER_SCALER = 2  # a constant to scale the distance that the arm moves up when orienting to the mouth
 
 # pins:
 MICRO_FRONT = 4
@@ -44,7 +44,7 @@ MAX_X = 600
 mouth_height = [0]
 mouth_dist = [0]
 
-# logger - wifi and mail
+# logging - wifi and mail
 MAGDAD_MAIL = "alinmagdad@outlook.com"
 CLIENT_MAIL = "alinmagdad@outlook.com"
 WIFI_NAME = ""
