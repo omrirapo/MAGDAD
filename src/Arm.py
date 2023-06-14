@@ -236,6 +236,19 @@ class Arm:
         return self._motor_input_to_coordinates(self._ShoulderMotor.get_x(), self._ArmMotor.currAngle,
                                                 self._WristMotor.currAngle)
 
+
+    def spill_food(self):
+        """
+        spills the food from the spoon after feeding
+        """
+        self.move_hand(-70, -163.40962324069412, -59.99999999999999)  # spilling the food
+        sleep(0.5)
+        self.move_hand(-70, -150.40962324069412, -50.99999999999999)  # spilling the food
+        sleep(0.5)
+        self.move_hand(-70, -163.40962324069412, -59.99999999999999)  # spilling the food
+        sleep(0.5)
+        self.move_hand(0, 0, 0)
+
     def get_x(self):
         """
 

@@ -15,6 +15,7 @@ import logging
 import logging.handlers
 
 current_action = None
+height_file_path = "prev_height.txt"
 pin_mangement = {
     SHOULDER_STP: "stpshoulder",
     SHOULDER_DIR: "dirshoulder",
@@ -81,6 +82,13 @@ def orient(arm: Arm, user_height=0):
 
     logging.info("started orient")
 
+    try:
+        height_file = open(height_file_path, 'r')
+        height = float(height_file.read())
+        arm.move_up(height)
+    except:
+        logging.warning("orient didnt succeed to find prev height or go to it")
+
     t = 0
     mouther = mouthing()
     val = mouther()  # todo add an explaination
@@ -99,6 +107,9 @@ def orient(arm: Arm, user_height=0):
     arm.move_hand(y=cams + CAM_HEIGHT, alpha=0)
     sleep(0.5)
     logging.info("finished orient")
+    height_file = open(height_file_path, 'w')
+    height_file.write(cams)
+
     return cams
     # db[name] = arm.get_alpha1()
 
@@ -251,7 +262,7 @@ def feed(arm, platter):
     # orient(arm, mouth_height[-1], CAM_HEIGHT)
     arm.disable_shoulder()
     current_action = "orient"
-    mouth_height.append(orient(arm, 0))
+    orient(arm, 0)
     arm.enable_shoulder()
     arm.move_to_minimal_x()
     current_action = "feed to user"
@@ -265,8 +276,7 @@ def feed(arm, platter):
     current_action = "return to start"
     arm.move_hand(0, 0, 0)
     arm.move_to_minimal_x()
-    arm.move_hand(-70, -163.40962324069412, -59.99999999999999)  # spilling the food
-    arm.move_hand(0, 0, 0)
+    #arm.spill_food()
     current_action = None
 
     sleep(0.5)
