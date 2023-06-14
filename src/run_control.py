@@ -281,9 +281,9 @@ def feed(arm, platter):
         arm.disable_shoulder()
         sleep(EATING_TIME)
         arm.enable_shoulder()
-    current_action = "return to start"
-    arm.move_hand(0, 0, 0)
-    arm.move_to_minimal_x()
+        current_action = "return to start"
+        arm.move_hand(0, 0, 0)
+        arm.move_to_minimal_x()
     # arm.spill_food()
     current_action = None
 
