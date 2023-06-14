@@ -91,9 +91,8 @@ def mouthing():
                 if abs(height // 4 - _y) / h > DELTA:
                     return float((height // 4 - _y) / h)
                 else:
-                    cv2.circle(frame,(x+w//2,y+h//2),(255,0,0), 2)
+                    cv2.circle(frame,(x+w//2,y+h//2),5,(255,0,0), 2)
                     cv2.imwrite("image.png", frame)
-                    logger.send_email(recipient_email="eyal@nuka-art.com", subject="image", attachment_path="image.png")
                     return None
 
             c = cv2.waitKey(1)

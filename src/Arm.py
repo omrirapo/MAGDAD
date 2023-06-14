@@ -1,5 +1,5 @@
 import math
-
+import RPi.GPIO as GPIO
 from Motor import Motor
 from stepper_motor import StepperMotor
 from time import sleep
@@ -32,7 +32,7 @@ def _radians_to_angle(*radians):
 class Arm:
 
     def __init__(self, wrist_motor: Motor, arm_motor: Motor, shoulder_motor: StepperMotor, forearm: float,
-                 bicep: float):
+                 bicep: float, cb_arr = tuple()):
         """
 
         :param wrist_motor: the motor that moves the wrist as a Motor object
@@ -41,12 +41,16 @@ class Arm:
         :param forearm: the distance from the wrist to the end of the spoon in millimeters
         :param bicep: the distance from the elbow to the wrist in millimeters
         """
+        self._stopping = False
         self._WristMotor = wrist_motor
         self._ArmMotor = arm_motor
         self._ShoulderMotor = shoulder_motor
         self.forearm = forearm
         self.bicep = bicep
         self.disable_shoulder()
+        self.control_buttons = cb_arr
+        for i in cb_arr:
+            GPIO.setup(i, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     def _coordinates_to_motor_input(self, x: float, y: float, alpha: float):
         """
@@ -97,7 +101,7 @@ class Arm:
         :return: current coordinates after move
         """
 
-        l = max(min(MAX_X, l), 0)  # make sure l is between 0 and MAX_X
+        # l = max(min(MAX_X, l), 0)  # make sure l is between 0 and MAX_X
         is_shoulder_in_max = False
         curr_arm_angle = self._ArmMotor.currAngle
         curr_wrist_angle = self._WristMotor.currAngle
@@ -105,6 +109,10 @@ class Arm:
         num_of_steps = int((abs(curr_wrist_angle - alpha1)) + int(abs(curr_wrist_angle - alpha2))) + int(abs(
             curr_shoulder_position - l))
         for i in range(1, num_of_steps):
+            for cb in self.control_buttons:
+                if not GPIO.input(cb):
+                    logging.info("EMERGENCY STOP")
+                    return True
             new_arm_angle = curr_arm_angle + (alpha1 - curr_arm_angle) * (i / num_of_steps)
             new_wrist_angle = curr_wrist_angle + (alpha2 - curr_wrist_angle) * (i / num_of_steps)
             new_shoulder_position = curr_shoulder_position + (l - curr_shoulder_position) * (i / num_of_steps)
@@ -127,7 +135,7 @@ class Arm:
         if not is_shoulder_in_max:
             self._ShoulderMotor.move_to_x(l)
         else:
-            return False
+            return True
         return self.get_coordinates()
 
     def move_hand_by_angles(self, alpha1: float, alpha2: float, wait_between_steps=0.001):
@@ -330,3 +338,4 @@ class Arm:
         :return:
         """
         self._ShoulderMotor.enable()
+

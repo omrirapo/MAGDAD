@@ -11,7 +11,7 @@ CCW = 0
 
 class StepperMotor:
     def __init__(self, DIR: int, STEP: int, ENABLE, steps_per_rotation: int, mm_per_angle: float = None,
-                 ms_arr=tuple()):
+                 ms_arr=tuple(), cb_arr=tuple()):
         """
 
         :param DIR: a gpio PIN that is connected to the DIR pin of the stepper motor, tells the motor to move CW or CCW
@@ -34,8 +34,12 @@ class StepperMotor:
         self._speed = 0
         self.wait_per_step = None
         self.micro_switches = ms_arr
+        self.control_buttons =cb_arr
         for i, s in ms_arr:
             GPIO.setup(i, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        for i in cb_arr:
+            GPIO.setup(i, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
 
     def step(self):
         """
@@ -67,7 +71,6 @@ class StepperMotor:
         :param new_angle: the new angle to move to in degrees
         """
         rotations = (new_angle - self.angle) / 360
-        # print(f"rotations: {rotations}, angle: {self.angle}, new_angle: {new_angle}")
         steps = round(self._steps_per_rotation * rotations)
         self.angle += (steps / self._steps_per_rotation) * 360
         d = 1
@@ -83,7 +86,9 @@ class StepperMotor:
             for ms, direction in self.micro_switches:
                 if d != direction and GPIO.input(ms):
                     return False
-
+            for cb in self.control_buttons:
+                if not GPIO.input(cb):
+                    return False
             self.step()
         return True
 
@@ -143,3 +148,4 @@ class StepperMotor:
         :return: the number of steps needed to move the distance
         """
         return round(dist * self._steps_per_rotation / (self._millis_per_angle * 360))
+

@@ -1,4 +1,4 @@
-MOUTH_FINDER_SCALER = 2  # a constant to scale the distance that the arm moves up when orienting to the mouth
+MOUTH_FINDER_SCALER = 5  # a constant to scale the distance that the arm moves up when orienting to the mouth
 
 # pins:
 MICRO_FRONT = 4
@@ -17,6 +17,9 @@ BOWL_DIR = 23
 BOWL_STP = 22
 BOWL_ENABLE = 18
 SERVO_PLATTER = 12
+EAT_CONTROL = 8
+CHANGE_CONTROL = 7
+STOP_CONTROL = 5  # NOT USED
 
 # servos
 wrist_servo_ang = 180
@@ -51,7 +54,7 @@ WIFI_NAME = ""
 WIFI_PASS = ""
 
 # Personal preferences
-MOUTH_DEPTH = 18  # the depth of the spoon in the mouth
-MOUTH_ANGLE = -7
+MOUTH_DEPTH = 20  # the depth of the spoon in the mouth
+MOUTH_ANGLE = -7  # the angle of the spoon in the mouth
 EATING_TIME = 2
 DEG_PER_BOWL_TURN = 330

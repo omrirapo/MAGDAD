@@ -5,12 +5,12 @@ import stepper_motor
 from Arm import Arm
 from Motor import Motor
 from consts import *
-
+import RPi.GPIO as GPIO
 
 class Plates:
 
     def __init__(self, platter_mot: Motor,
-                 turn_mot: stepper_motor, arm: Arm):
+                 turn_mot: stepper_motor, arm: Arm,cb_arr=tuple()):
         """
 
         :param platter_mot: servo motor to switch plates
@@ -24,6 +24,9 @@ class Plates:
         self.turn_motor = turn_mot
         self.turn_motor.disable()
         self.arm = arm
+        self.control_buttons = cb_arr
+        for i in cb_arr:
+            GPIO.setup(i, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     def change_plate(self):
         """
