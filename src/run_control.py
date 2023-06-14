@@ -104,13 +104,22 @@ def orient(arm: Arm, user_height=0):
 
     sleep(0.5)
     cams = arm.get_y()
-    arm.move_hand(y=cams + CAM_HEIGHT, alpha=0)
-    sleep(0.5)
+    if not arm.move_hand(y=cams + CAM_HEIGHT, alpha=0):
+        logging.error("orient failed to finish movement, you're to high up")
+        return False
     logging.info("finished orient")
+
+    if MIN_ORIENT_HEIGHT > arm.get_y():
+        logging.error("can't continue, you're to low")
+        return False
+    if arm.get_y() > MAX_ORIENT_HEIGHT:
+        logging.error("can't continue, you're to high")
+        return False
     height_file = open(height_file_path, 'w')
-    height_file.write(cams)
+    height_file.write(str(cams))
 
     return cams
+
     # db[name] = arm.get_alpha1()
 
     # with open('DB', 'ab') as dbfile:
@@ -184,11 +193,10 @@ def on_eat_control_pressed(arm: Arm, platter: Plates):
     print("eat control pressed")
     if current_action is None:
         feed(arm, platter)
-    elif current_action == "orient" or current_action == "feed to user" :
+    elif current_action == "orient" or current_action == "feed to user":
         pass
     elif current_action == "change food":
         pass
-
 
 
 def on_change_control_pressed(arm: Arm, platter: Plates):
@@ -276,7 +284,7 @@ def feed(arm, platter):
     current_action = "return to start"
     arm.move_hand(0, 0, 0)
     arm.move_to_minimal_x()
-    #arm.spill_food()
+    # arm.spill_food()
     current_action = None
 
     sleep(0.5)

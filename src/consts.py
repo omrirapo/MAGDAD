@@ -36,6 +36,8 @@ STEP_DELAY = 0.00324
 
 # dimensions
 CAM_HEIGHT = 35
+MIN_ORIENT_HEIGHT = -80
+MAX_ORIENT_HEIGHT = float("inf")
 # arm lengths
 FOREARM = 138.44  # from the wrist to the end of the spoon
 BICEP = 129.5  # the length from the elbow to the wrist
