@@ -33,9 +33,9 @@ def mouthing():
     """
     MAX_FRAME_OF_LOSS = 5
     # initializes cascades
-    face_cascade = cv2.CascadeClassifier(relative_path + 'haarcascade_frontalface_default.xml')
-    mouth_cascade = cv2.CascadeClassifier(relative_path +'haarcascade_mcs_mouth.xml')
-    eyes_cascade = cv2.CascadeClassifier(relative_path +'haarcascade_smile.xml')
+    face_cascade = cv2.CascadeClassifier(RELATIVE_PATH + 'haarcascade_frontalface_default.xml')
+    mouth_cascade = cv2.CascadeClassifier(RELATIVE_PATH + 'haarcascade_mcs_mouth.xml')
+    eyes_cascade = cv2.CascadeClassifier(RELATIVE_PATH + 'haarcascade_smile.xml')
     frame_count = 0
     frame_movement = 0
     t = -1

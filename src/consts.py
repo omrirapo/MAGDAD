@@ -50,10 +50,12 @@ mouth_height = [0]
 mouth_dist = [0]
 
 # logging - wifi and mail
-MAGDAD_MAIL = "alinmagdad@outlook.com"
-CLIENT_MAIL = "alinmagdad@outlook.com"
-WIFI_NAME = ""
-WIFI_PASS = ""
+SENDER_MAIL = "alinmagdad@outlook.com"
+SENDER_PASS = "yogev&0mri"
+RECIEVER_MAIL = "alinmagdad1@outlook.co.il"
+
+# wifi format : list of tuple ("<wifi name>","<password>") if no password then ""
+WIFI_INFO = [("huji-guest", "")]
 
 # Personal preferences
 MOUTH_DEPTH = 20  # the depth of the spoon in the mouth
@@ -61,8 +63,10 @@ MOUTH_ANGLE = -7  # the angle of the spoon in the mouth
 EATING_TIME = 2
 DEG_PER_BOWL_TURN = 330
 
-#FilePaths
-relative_path = "/home/pi/FeedingMagdadAlin/"
-memory_dir_path = relative_path + "memory_dir/"
-height_file_path = memory_dir_path + "prev_height.txt"
-initial_plate_path = memory_dir_path + "initial_plate.txt"
+# FilePaths
+RELATIVE_PATH = "/home/pi/FeedingMagdadAlin/"
+MEMORY_DIR_PATH = RELATIVE_PATH + "memory_dir/"
+HEIGHT_FILE_PATH = MEMORY_DIR_PATH + "prev_height.txt"
+INITIAL_PLATE_PATH = MEMORY_DIR_PATH + "initial_plate.txt"
+IMG_PATH = RELATIVE_PATH + "IMAGES"
+LOG_PATH = RELATIVE_PATH + "logs.log"

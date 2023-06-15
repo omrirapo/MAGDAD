@@ -89,7 +89,6 @@ def mouthing(arm: Arm):
 
                 y = int(y - 0.15 * h)
 
-                test_start = True
                 _y = y + h // 2
                 if abs(height // 4 - _y) / h > DELTA:
                     return float((height // 4 - _y) / h)
@@ -100,6 +99,7 @@ def mouthing(arm: Arm):
                     imgname = f"image_h{arm.get_y()+CAM_HEIGHT}_time:{formatted_datetime}.png"
                     cv2.imwrite(IMG_PATH+imgname, frame)
                     return None
+            # escape halts :
             c = cv2.waitKey(1)
             if c == 27:
                 break

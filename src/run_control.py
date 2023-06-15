@@ -84,7 +84,7 @@ def orient(arm: Arm, user_height=0):
     logging.info("started orient")
 
     try:
-        height_file = open(height_file_path, 'r')
+        height_file = open(HEIGHT_FILE_PATH, 'r')
         height = float(height_file.read())
         arm.move_up(height)
     except:
@@ -118,7 +118,7 @@ def orient(arm: Arm, user_height=0):
     if arm.get_y() > MAX_ORIENT_HEIGHT:
         logging.error("can't continue, you're to high")
         return False
-    height_file = open(height_file_path, 'w')
+    height_file = open(HEIGHT_FILE_PATH, 'w')
     height_file.write(str(cams))
 
     return cams
@@ -170,7 +170,7 @@ def init_platter(arm):
     :return:
     """
     try:
-        initial_plate_file = open(initial_plate_path, 'r')
+        initial_plate_file = open(INITIAL_PLATE_PATH, 'r')
         initial_plate = int(initial_plate_file.read())
     except:
         logging.warning("couldn't find last plate")
@@ -250,6 +250,7 @@ def flow():
     platter = init_platter(arm)
     init_control_buttons(arm, platter)
     # initialise arm
+    count = 0
     while True:
         cmd = get_command(arm, platter)
         if cmd == "exit":
@@ -258,6 +259,9 @@ def flow():
             platter.go_to_start()
             return
         sleep(0.5)
+        if count == 2:
+            logger.send_logs()
+
 
 def check_stop_buttons():
     """
@@ -317,10 +321,9 @@ def feed(arm, platter):
     sleep(0.5)
 
     arm.disable_shoulder()
-    logger.send_email(subject="image", attachment_path="image.png")
-
 
 if __name__ == '__main__':
+    logger.send_logs()
     logs = open("logs.log", 'w')
     if not logs:
         print("can't open log file")
