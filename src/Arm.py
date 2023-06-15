@@ -83,6 +83,17 @@ class Arm:
         alpha = _radians_to_angle(alpha)
         return x, y, alpha
 
+    def wake_up(self):
+        """
+        it says hello with the arm when initialized
+        """
+        sleep(0.5)
+        self.move_up(50)
+        sleep(0.2)
+        self.move_up(-100)
+        sleep(0.4)
+        self.move_up(50)
+
     def move_to_minimal_x(self):
         """
         moves the arm backwards until it reaches the minimal x coordinate

@@ -15,7 +15,8 @@ import logging
 import logging.handlers
 
 current_action = None
-height_file_path = "prev_height.txt"
+
+
 pin_mangement = {
     SHOULDER_STP: "stpshoulder",
     SHOULDER_DIR: "dirshoulder",
@@ -93,6 +94,8 @@ def orient(arm: Arm, user_height=0):
     mouther = mouthing()
     val = mouther()  # todo add an explaination
     while val is not None:
+        if check_stop_buttons():
+            return False
         try:
             arm.move_up(val * MOUTH_FINDER_SCALER)
         except Exception as e:
@@ -139,6 +142,8 @@ def move_till_touch(arm: Arm, dist, time):
     GPIO.setup(TOUCH, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     while not (GPIO.input(TOUCH)):
+        if check_stop_buttons():
+            return False
         if not arm.move_forward(dist):
             return False
     mouth_dist.append(arm.get_x())
@@ -164,10 +169,16 @@ def init_platter(arm):
 
     :return:
     """
+    try:
+        initial_plate_file = open(initial_plate_path, 'r')
+        initial_plate = int(initial_plate_file.read())
+    except:
+        logging.warning("couldn't find last plate")
+        initial_plate = 0
     plate_servos = lambda alpha: alpha / (plate_servo_ang / 2)
-    plat_mot = Motor(SERVO_PLATTER, plate_servos)
+    plat_mot = Motor(SERVO_PLATTER, plate_servos, initial_angle=(initial_plate - 1) * 120)
     turn_mot = StepperMotor(BOWL_DIR, BOWL_STP, BOWL_ENABLE, BOWL_NUM)
-    return Plates(plat_mot, turn_mot, arm)
+    return Plates(plat_mot, turn_mot, arm, initial_plate)
 
 
 def init_arm():
@@ -218,11 +229,11 @@ def init_control_buttons(arm, platter):
 
     # Set the touch sensor pin as an input with a pull-up resistor
     GPIO.setup(EAT_CONTROL, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    GPIO.add_event_detect(EAT_CONTROL, GPIO.FALLING, callback=lambda _: on_eat_control_pressed(arm, platter),
-                          bouncetime=200)
+    #GPIO.add_event_detect(EAT_CONTROL, GPIO.FALLING, callback=lambda _: on_eat_control_pressed(arm, platter),
+    #                      bouncetime=200)
     GPIO.setup(CHANGE_CONTROL, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    GPIO.add_event_detect(CHANGE_CONTROL, GPIO.FALLING, callback=lambda _: on_change_control_pressed(arm, platter),
-                          bouncetime=200)
+    #GPIO.add_event_detect(CHANGE_CONTROL, GPIO.FALLING, callback=lambda _: on_change_control_pressed(arm, platter),
+    #                      bouncetime=200)
 
 
 def flow():
@@ -234,6 +245,7 @@ def flow():
 
     # initialise plate:
     arm = init_arm()
+    arm.wake_up()
 
     platter = init_platter(arm)
     init_control_buttons(arm, platter)
@@ -247,15 +259,30 @@ def flow():
             return
         sleep(0.5)
 
-
+def check_stop_buttons():
+    """
+    checks if one of the buttons is pressed and if so returns True
+    """
+    return not (GPIO.input(CHANGE_CONTROL) and GPIO.input(EAT_CONTROL))
 def get_command(arm, platter):
-    inp = input("E - Eat. C - change, Q - quit")
-    if inp == "E":
+    """
+    checks if one of the buttons is pressed and if so runs the corresponding command
+    Note: activated only when in (0,0,0) waiting for orders/
+    """
+    if not GPIO.input(EAT_CONTROL):
+        print("eat")
         return feed(arm, platter)
-    elif inp == "C":
+    elif not GPIO.input(CHANGE_CONTROL):
+        print("change")
         return platter.change_plate()
-    elif inp == "Q":
-        return "exit"
+    print("nothing")
+    # inp = input("E - Eat. C - change, Q - quit")
+    # if inp == "E":
+    #     return feed(arm, platter)
+    # elif inp == "C":
+    #     return platter.change_plate()
+    # elif inp == "Q":
+    #     return "exit"
 
 
 def feed(arm, platter):
@@ -280,11 +307,11 @@ def feed(arm, platter):
             sleep(0.2)
         arm.disable_shoulder()
         sleep(EATING_TIME)
-        arm.enable_shoulder()
-        current_action = "return to start"
-        arm.move_hand(0, 0, 0)
-        arm.move_to_minimal_x()
-    # arm.spill_food()
+    arm.enable_shoulder()
+    current_action = "return to start"
+    arm.move_hand(0, 0, 0)
+    arm.move_to_minimal_x()
+    #arm.spill_food()
     current_action = None
 
     sleep(0.5)

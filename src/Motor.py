@@ -7,7 +7,8 @@ from gpiozero.pins.pigpio import PiGPIOFactory
 
 class Motor:
 
-    def __init__(self, GPIO: int, Anlge2ValConverter: Callable, MinSignal=0.5 / 1000, MaxSignal=2.5 / 1000):
+    def __init__(self, GPIO: int, Anlge2ValConverter: Callable, MinSignal=0.5 / 1000, MaxSignal=2.5 / 1000,
+                 initial_angle=0):
         """
         a Class that represents a servo motor
         :param GPIO: the GPIO pin number
@@ -18,8 +19,8 @@ class Motor:
         factory = PiGPIOFactory()
         self._servo = Servo(GPIO, min_pulse_width=MinSignal, max_pulse_width=MaxSignal, pin_factory=factory)
         self._Anlge2ValConverter = Anlge2ValConverter
-        self.currAngle = 0
-        self.move_to_angle(0)
+        self.currAngle = initial_angle
+        self.move_to_angle(initial_angle)
 
     @property
     def Anlge2ValConverter(self):
@@ -70,7 +71,7 @@ class Motor:
                 self._servo.value = val
                 sleep(time / stps)
             self.currAngle = new_angle
-            
+
             return True
         elif -1 <= self._Anlge2ValConverter(new_angle) <= 1:
             self._servo.value = self._Anlge2ValConverter(new_angle)

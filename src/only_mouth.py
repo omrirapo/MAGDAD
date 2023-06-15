@@ -1,5 +1,8 @@
 import cv2
 import logger
+import datetime
+from consts import IMG_PATH
+
 DELTA = 0.4
 
 
@@ -25,7 +28,7 @@ def restrict_to_target(target, obj_arr):
     return recs
 
 
-def mouthing():
+def mouthing(arm: Arm):
     """
     a function using image recognition in order to give an approximation to the location of the mouth
     :return: the distance between the mouth and the middle of the image in proportion to the size of the mouth
@@ -92,9 +95,11 @@ def mouthing():
                     return float((height // 4 - _y) / h)
                 else:
                     cv2.circle(frame,(x+w//2,y+h//2),5,(255,0,0), 2)
-                    cv2.imwrite("image.png", frame)
+                    current_datetime = datetime.datetime.now()  # Get the current date and time
+                    formatted_datetime = current_datetime.strftime("%Y-%m-%d_%H_%M")  # Format the date and time
+                    imgname = f"image_h{arm.get_y()+CAM_HEIGHT}_time:{formatted_datetime}.png"
+                    cv2.imwrite(IMG_PATH+imgname, frame)
                     return None
-
             c = cv2.waitKey(1)
             if c == 27:
                 break

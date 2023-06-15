@@ -60,3 +60,9 @@ MOUTH_DEPTH = 20  # the depth of the spoon in the mouth
 MOUTH_ANGLE = -7  # the angle of the spoon in the mouth
 EATING_TIME = 2
 DEG_PER_BOWL_TURN = 330
+
+#FilePaths
+relative_path = "/home/pi/FeedingMagdadAlin/"
+memory_dir_path = relative_path + "memory_dir/"
+height_file_path = memory_dir_path + "prev_height.txt"
+initial_plate_path = memory_dir_path + "initial_plate.txt"
