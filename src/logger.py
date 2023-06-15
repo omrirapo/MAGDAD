@@ -8,6 +8,7 @@ import email
 import os
 import shutil
 import logging
+from consts import *
 
 
 def send_email(sender_email="alinmagdad@outlook.com", sender_password="yogev&0mri",
@@ -62,14 +63,19 @@ def sender():
     sender_email = "alinmagdad@outlook.com"
     sender_password = "yogev&0mri"
     recipient_email = "shahar.mozes@gmail.com"
-    subject = "Test Email with python"
-    message = "hi,\n this mail was sent via python. I plan to use this method to send user reports"
-    attachment_path = "/Users/yogev/Library/CloudStorage/OneDrive-Personal/talp_files/yr 2/sem d/logic 2/sol8.pdf"
+    attachment_path = "image.png"
+    with open(height_file_path,'r') as f:
+        height = f.read()
+    subject = f"user report h = {height}"
+    with open(LOGG, 'r') as file:
+        log_content = file.read()
+
+    # Format the log content
+    message = f"Log Content:\n\n{log_content}"
 
     # Send the email
     send_email(sender_email=sender_email, sender_password=sender_password, recipient_email=recipient_email,
                subject=subject, message=message, attachment_path=attachment_path)
-
 
 # recieve data file via mail
 def download_attachment_with_subject(username="alinmagdad@outlook.com", password="yogev&0mri", subject=None,

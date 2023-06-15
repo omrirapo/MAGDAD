@@ -317,8 +317,7 @@ def feed(arm, platter):
     sleep(0.5)
 
     arm.disable_shoulder()
-    logger.send_email(subject="image", attachment_path="image.png")
-
+    logger.sender()
 
 if __name__ == '__main__':
     logs = open("logs.log", 'w')

@@ -51,6 +51,7 @@ mouth_dist = [0]
 
 # logging - wifi and mail
 MAGDAD_MAIL = "alinmagdad@outlook.com"
+MAGDAD_PASS = "yogev&0mri"
 CLIENT_MAIL = "alinmagdad@outlook.com"
 WIFI_NAME = ""
 WIFI_PASS = ""
@@ -66,3 +67,5 @@ relative_path = "/home/pi/FeedingMagdadAlin/"
 memory_dir_path = relative_path + "memory_dir/"
 height_file_path = memory_dir_path + "prev_height.txt"
 initial_plate_path = memory_dir_path + "initial_plate.txt"
+IMAGE_DIR = relative_path+"IMAGES"
+LOGG = relative_path+"logs.log"
