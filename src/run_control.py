@@ -317,8 +317,10 @@ def feed(arm, platter):
     sleep(0.5)
 
     arm.disable_shoulder()
-    logger.sender()
-
+    try:
+        logger.sender()
+    except Exception as e:
+        print(f"send fail {e}")
 if __name__ == '__main__':
     logs = open("logs.log", 'w')
     if not logs:

@@ -11,58 +11,61 @@ import logging
 from consts import *
 
 
-def send_email(sender_email="alinmagdad@outlook.com", sender_password="yogev&0mri",
-               recipient_email="alinmagdad@outlook.com", cc_emails=None, subject="", message="",
+def send_email(sender_email=MAGDAD_MAIL, sender_password=MAGDAD_PASS,
+               recipient_email=CLIENT_MAIL, cc_emails=None, subject="", message="",
                attachment_path=None):
-    smtp_server = "smtp.office365.com"
-    smtp_port = 587
-
-    # Create the email message
-    email = MIMEMultipart()
-    email["From"] = sender_email
-    email["To"] = recipient_email
-    # if cc_emails:
-    #   email["Cc"] = ", ".join(cc_emails)  # Join CC emails with comma separator
-
-    email["Subject"] = subject
-
-    # Attach the message to the email
-    email.attach(MIMEText(message, "plain"))
-
-    # Attach the file
-    if attachment_path:
-        attachment_filename = os.path.basename(attachment_path)
-
-        attachment = open(attachment_path, "rb")
-        mime_base = MIMEBase("application", "octet-stream")
-        mime_base.set_payload((attachment).read())
-        encoders.encode_base64(mime_base)
-        mime_base.add_header("Content-Disposition", f"attachment; filename= {attachment_filename}")
-        email.attach(mime_base)
-
-    # Create a secure SSL/TLS connection
-    server = smtplib.SMTP(smtp_server, smtp_port)
-    server.starttls()
-
     try:
-        # Login to the email account
-        server.login(sender_email, sender_password)
+        smtp_server = "smtp.office365.com"
+        smtp_port = 587
 
-        # Send the email
-        server.sendmail(sender_email, recipient_email, email.as_string())
-        logging.info("Email sent successfully.")
-    except Exception as e:
-        logging.error("Failed to send email. "+str(e))
-    finally:
+        # Create the email message
+        email = MIMEMultipart()
+        email["From"] = sender_email
+        email["To"] = recipient_email
+        # if cc_emails:
+        #   email["Cc"] = ", ".join(cc_emails)  # Join CC emails with comma separator
+
+        email["Subject"] = subject
+
+        # Attach the message to the email
+        email.attach(MIMEText(message, "plain"))
+
+        # Attach the file
+        if attachment_path:
+            attachment_filename = os.path.basename(attachment_path)
+
+            attachment = open(attachment_path, "rb")
+            mime_base = MIMEBase("application", "octet-stream")
+            mime_base.set_payload((attachment).read())
+            encoders.encode_base64(mime_base)
+            mime_base.add_header("Content-Disposition", f"attachment; filename= {attachment_filename}")
+            email.attach(mime_base)
+
+        # Create a secure SSL/TLS connection
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()
+
+        try:
+            # Login to the email account
+            server.login(sender_email, sender_password)
+
+            # Send the email
+            server.sendmail(sender_email, recipient_email, email.as_string())
+            logging.info("Email sent successfully.")
+        except Exception as e:
+            logging.error("Failed to send email. "+str(e))
+        finally:
         # Close the connection
-        server.quit()
+            server.quit()
+    except Exception as e:
+        return
 
 
 def sender():
     # Provide your email credentials and other details
-    sender_email = "alinmagdad@outlook.com"
-    sender_password = "yogev&0mri"
-    recipient_email = "shahar.mozes@gmail.com"
+    sender_email = MAGDAD_MAIL
+    sender_password = MAGDAD_PASS
+    recipient_email = CLIENT_MAIL
     attachment_path = "image.png"
     with open(height_file_path,'r') as f:
         height = f.read()
@@ -72,10 +75,12 @@ def sender():
 
     # Format the log content
     message = f"Log Content:\n\n{log_content}"
-
-    # Send the email
-    send_email(sender_email=sender_email, sender_password=sender_password, recipient_email=recipient_email,
+    try:
+        # Send the email
+        send_email(sender_email=sender_email, sender_password=sender_password, recipient_email=recipient_email,
                subject=subject, message=message, attachment_path=attachment_path)
+    except Exception as e:
+        return
 
 # recieve data file via mail
 def download_attachment_with_subject(username="alinmagdad@outlook.com", password="yogev&0mri", subject=None,
@@ -83,6 +88,7 @@ def download_attachment_with_subject(username="alinmagdad@outlook.com", password
     """
 
     :param username:
+
     :param password:
     :param subject:
     :param save_folder:
