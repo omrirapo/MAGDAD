@@ -1,104 +1,85 @@
-import cv2
+import logging
+from time import sleep
+
+import stepper_motor
+from Arm import Arm
+from Motor import Motor
 from consts import *
-import logger
-DELTA = 0.4
+import RPi.GPIO as GPIO
 
+class Plates:
 
-def restrict_to_target(target, obj_arr):
-    """
-    rstrict search for specific target rect. recieves a rectangle and a list of rectangles and returnes
-    a new list of all the rects that intersect it.
-    sorted by the size of the intesection
-    :param target: (x,y,w,h)
-    :param obj_arr: array of rects
-    :return: list of rects in obj arr that intersect with target
-    """
-    if target is None:
-        return [(x, 0) for x in obj_arr]
-    recs = []
-    for rec in obj_arr:
-        if rec[2] + target[2] < max(rec[0] + rec[2], target[0] + target[2]) - min(rec[0], target[0]) or rec[3] + target[
-            3] < max(rec[1] + rec[3], target[1] + target[3]) - min(rec[1], target[1]):
-            recs.append((rec, 0))
-        else:
-            recs.append((rec, 1))
+    def __init__(self, platter_mot: Motor,
+                 turn_mot: stepper_motor, arm: Arm, initial_plate: int = 0, cb_arr=tuple()):
+        """
 
-    return recs
+        :param platter_mot: servo motor to switch plates
+        :param turn_mot: stepper motor to tuen plates
+        """
 
+        self.diag = 0
+        self.cur_plate = initial_plate  # plates 0,1,2
+        self.angle_fed = [(j, [0 for i in range(24)]) for j in range(3)]  # array of angles that where fed
+        self.platter_motor = platter_mot
+        self.turn_motor = turn_mot
+        self.turn_motor.disable()
+        self.arm = arm
+        self.control_buttons = cb_arr
+        for i in cb_arr:
+            GPIO.setup(i, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-def mouthing():
-    """
-    a function using image recognition in order to give an approximation to the location of the mouth
-    :return: the distance between the mouth and the middle of the image in proportion to the size of the mouth
-    """
-    MAX_FRAME_OF_LOSS = 5
-    # initializes cascades
-    face_cascade = cv2.CascadeClassifier(RELATIVE_PATH + 'haarcascade_frontalface_default.xml')
-    mouth_cascade = cv2.CascadeClassifier(RELATIVE_PATH + 'haarcascade_mcs_mouth.xml')
-    eyes_cascade = cv2.CascadeClassifier(RELATIVE_PATH + 'haarcascade_smile.xml')
-    frame_count = 0
-    frame_movement = 0
-    t = -1
-    if mouth_cascade.empty():
-        raise IOError('Unable to load the mouth cascade classifier xml file')
+    def change_plate(self):
+        """
+        change the plate that is eaten from
+        bowls 0 -120, 1 - 0, 2 - 120 -> ang = (curbowl-1)*120-
+        :return:
+        """
+        self.arm.move_hand(0, 0, 0)
+        sleep(1)
+        self.cur_plate = (self.cur_plate + 1) % 3
+        angle_to_move = (self.cur_plate - 1) * 120
 
-    cap = cv2.VideoCapture(0)
-    ds_factor = 0.5
-    curr = None
-    diff = (0, 0)
-    frame_loss = 0
+        time = 1
+        stps = 1000
+        if self.cur_plate == 0:
+            time = 2
+            stps = 2000
 
-    def get_pos():
+        self.platter_motor.move_to_angle(angle_to_move, time, stps)
+        initial_plate_file = open(initial_plate_path, 'w')
+        initial_plate_file.write(str(self.cur_plate))
 
-        while True:
-            ret, frame = cap.read()
-            height, width, channels = frame.shape
-            # gives instructions
+    def turn_bowl(self):
+        """
+        turn bowl to the minimum
+        :return:
+        """
+        self.turn_motor.move_to_angle(self.turn_motor.get_angle() + DEG_PER_BOWL_TURN)
 
-            frame = cv2.resize(frame, None, fx=ds_factor, fy=ds_factor, interpolation=cv2.INTER_AREA)
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            # Find faces
-            faces = face_cascade.detectMultiScale(gray, 1.3, 30)
-            # Find mouths
-            mouth_rects = mouth_cascade.detectMultiScale(gray, 1.1, 13)
-            # Finds eyes
-            eyes_rects = eyes_cascade.detectMultiScale(gray, 1.1, 13)
-            # Filter all mouths inside a face
-            if len(faces) != 0:
-                temp_arr = []
-                for i in faces:
-                    temp = restrict_to_target(i, mouth_rects)
-                    for j, val in temp:
-                        if val != 0:
-                            temp_arr.append(j)
-                mouth_rects = temp_arr
+    def update_ate(self):
+        """
+        update the arrray of eaten
+        :return:
+        """
+        self.angle_fed[self.cur_plate][self.diag] += 1
 
-            # deletes all eyes
+    def disable_bowl_motor(self):
+        """
+        disable the bowl motor uses stepper_motor.disable_motor()
+        :return:
+        """
+        self.turn_motor.disable()
 
-            for i in eyes_rects:
-                temp = restrict_to_target(i, mouth_rects)
-                mouth_rects = []
-                for j, val in temp:
-                    if val == 0:
-                        mouth_rects.append(j)
+    def enable_bowl_motor(self):
+        """
+        enables the shoulder motor uses stepper_motor.enable
+        :return:
+        """
+        self.turn_motor.enable()
 
-            # paints over the picture
-            for (x, y, w, h) in mouth_rects:
-
-                y = int(y - 0.15 * h)
-
-                test_start = True
-                _y = y + h // 2
-                if abs(height // 4 - _y) / h > DELTA:
-                    return float((height // 4 - _y) / h)
-                else:
-                    cv2.circle(frame,(x+w//2,y+h//2),5,(255,0,0), 2)
-                    cv2.imwrite("image.png", frame)
-                    return None
-
-            c = cv2.waitKey(1)
-            if c == 27:
-                break
-
-    return get_pos
-
+    def go_to_start(self):
+        if self.cur_plate == 0:
+            return
+        time = 1
+        stps = 1000
+        self.platter_motor.move_to_angle(0, time, stps)

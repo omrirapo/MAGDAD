@@ -1,8 +1,6 @@
 import cv2
+from consts import *
 import logger
-import datetime
-from consts import IMG_PATH
-
 DELTA = 0.4
 
 
@@ -28,16 +26,16 @@ def restrict_to_target(target, obj_arr):
     return recs
 
 
-def mouthing(arm: Arm):
+def mouthing():
     """
     a function using image recognition in order to give an approximation to the location of the mouth
     :return: the distance between the mouth and the middle of the image in proportion to the size of the mouth
     """
     MAX_FRAME_OF_LOSS = 5
     # initializes cascades
-    face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-    mouth_cascade = cv2.CascadeClassifier('haarcascade_mcs_mouth.xml')
-    eyes_cascade = cv2.CascadeClassifier('haarcascade_smile.xml')
+    face_cascade = cv2.CascadeClassifier(relative_path + 'haarcascade_frontalface_default.xml')
+    mouth_cascade = cv2.CascadeClassifier(relative_path +'haarcascade_mcs_mouth.xml')
+    eyes_cascade = cv2.CascadeClassifier(relative_path +'haarcascade_smile.xml')
     frame_count = 0
     frame_movement = 0
     t = -1
@@ -89,17 +87,15 @@ def mouthing(arm: Arm):
 
                 y = int(y - 0.15 * h)
 
+                test_start = True
                 _y = y + h // 2
                 if abs(height // 4 - _y) / h > DELTA:
                     return float((height // 4 - _y) / h)
                 else:
                     cv2.circle(frame,(x+w//2,y+h//2),5,(255,0,0), 2)
-                    current_datetime = datetime.datetime.now()  # Get the current date and time
-                    formatted_datetime = current_datetime.strftime("%Y-%m-%d_%H_%M")  # Format the date and time
-                    imgname = f"image_h{arm.get_y()+CAM_HEIGHT}_time:{formatted_datetime}.png"
-                    cv2.imwrite(IMG_PATH+imgname, frame)
+                    cv2.imwrite("image.png", frame)
                     return None
-            # escape halts :
+
             c = cv2.waitKey(1)
             if c == 27:
                 break
